@@ -1,8 +1,6 @@
 <script setup>
+import LogoSrc from '@/assets/img/logo_pic.png'
 import LogoTextSrc from '@/assets/img/logo_text.png'
-
-/* 与 index.html 的 favicon 共用 public 下的同一份资源，避免重复维护 */
-const LogoSrc = '/logo_pic.png'
 
 const headBtnTexts = {
   角色图鉴: 'avatars',
