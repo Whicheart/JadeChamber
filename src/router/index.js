@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import Home from './HomePage.vue'
-import Avatars from './Avatars.vue'
-import Weapons from './Weapons.vue'
-import Artifacts from './Artifacts.vue'
-import Banners from './Banners.vue'
-import Formulae from './Formulae.vue'
+import Home from '@/views/HomeView.vue'
+import AvatarList from '@/views/AvatarListView.vue'
+import WeaponList from '@/views/WeaponListView.vue'
+import ArtifactList from '@/views/ArtifactListView.vue'
+import BannerList from '@/views/BannerListView.vue'
+import Formulae from '@/views/FormulaeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,22 +18,22 @@ const router = createRouter({
     {
       path: '/avatars',
       name: 'avatars',
-      component: Avatars,
+      component: AvatarList,
     },
     {
       path: '/weapons',
       name: 'weapons',
-      component: Weapons,
+      component: WeaponList,
     },
     {
       path: '/artifacts',
       name: 'artifacts',
-      component: Artifacts,
+      component: ArtifactList,
     },
     {
       path: '/banners',
       name: 'banners',
-      component: Banners,
+      component: BannerList,
     },
     {
       path: '/formulae',
@@ -43,17 +43,17 @@ const router = createRouter({
     {
       path: '/avatars/:avatarName',
       name: 'avatarPage',
-      component: () => import('./AvatarPage.vue'),
+      component: () => import('@/views/AvatarDetailView.vue'),
     },
     {
       path: '/weapons/:weaponName',
       name: 'weaponPage',
-      component: () => import('./WeaponPage.vue'),
+      component: () => import('@/views/WeaponDetailView.vue'),
     },
     {
       path: '/artifacts/:artifactName',
       name: 'artifactPage',
-      component: () => import('./ArtifactPage.vue'),
+      component: () => import('@/views/ArtifactDetailView.vue'),
     },
   ],
 })

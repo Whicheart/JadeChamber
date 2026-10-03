@@ -2,7 +2,7 @@
 import LogoSrc from '@/assets/img/logo_pic.png'
 import LogoTextSrc from '@/assets/img/logo_text.png'
 
-const head_btnTexts = {
+const headBtnTexts = {
   角色图鉴: 'avatars',
   武器图鉴: 'weapons',
   // 'artifacts': 'artifacts',
@@ -14,13 +14,13 @@ const head_btnTexts = {
 <template>
   <div id="head">
     <div @click="$router.push('/')">
-      <img id="head_logo" :src="LogoSrc" alt="head logo" />
-      <img id="head_logoText" :src="LogoTextSrc" alt="head logo text" />
+      <img id="head-logo" :src="LogoSrc" alt="head logo" />
+      <img id="head-logo-text" :src="LogoTextSrc" alt="head logo text" />
     </div>
     <button
-      v-for="(value, key) in head_btnTexts"
+      v-for="(value, key) in headBtnTexts"
       :key="key"
-      class="head_btn"
+      class="head-btn"
       @click="$router.push('/' + value)"
     >
       {{ key }}
@@ -103,7 +103,7 @@ const head_btnTexts = {
 }
 
 /* Head Logo 图标 */
-#head_logo {
+#head-logo {
   position: absolute;
   top: 5px;
   left: 20px;
@@ -112,7 +112,7 @@ const head_btnTexts = {
 }
 
 /* Head Logo 文字 */
-#head_logoText {
+#head-logo-text {
   position: absolute;
   top: 25px;
   left: 100px;
@@ -121,7 +121,7 @@ const head_btnTexts = {
 }
 
 /* Head 按钮 */
-.head_btn {
+.head-btn {
   width: auto;
   height: 40px;
   padding: 0 20px 0 20px;
@@ -134,7 +134,7 @@ const head_btnTexts = {
   letter-spacing: 1px;
   transition: 350ms;
 }
-.head_btn:hover {
+.head-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 1);
   /* border: 0.5px solid transparent; */
@@ -142,14 +142,14 @@ const head_btnTexts = {
   cursor: pointer;
   transition: 200ms;
 }
-.head_btn:focus {
+.head-btn:focus {
   background-color: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 1);
   /* border: 0.5px solid transparent; */
   border: 0;
   transition: 100ms;
 }
-#LoginBtn {
+#login-btn {
   position: absolute;
   right: 30px;
   height: 40px;
@@ -159,7 +159,7 @@ const head_btnTexts = {
   border-radius: 10px;
   transition: 100ms;
 }
-#LoginBtn:hover {
+#login-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 1);
   border: solid 0.5px rgba(255, 255, 255, 0.4);

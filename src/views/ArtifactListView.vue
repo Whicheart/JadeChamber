@@ -48,7 +48,7 @@ async function fetchArtifacts() {
   <div id="body">
     <div id="filter">
       <input
-        class="filter_input"
+        class="filter-input"
         type="text"
         v-model="artifactSearchName"
         placeholder="Search..."
@@ -62,7 +62,7 @@ async function fetchArtifacts() {
         :style="{ backgroundImage: `url(${getArtifactImageUrl(artifact.setName)})` }"
         @click="$router.push(`/artifacts/${artifact.setName}`)"
       >
-        <div class="artifactCard_Name">
+        <div class="artifact-card-name">
           {{ artifact.setName }}
         </div>
       </button>
@@ -101,7 +101,7 @@ input:focus {
   align-items: center;
   margin: 20px 0px 15px 0px;
 }
-.filter_input {
+.filter-input {
   width: 100%;
   height: 20px;
   background-color: transparent;
@@ -161,7 +161,7 @@ input:focus {
   );
   pointer-events: none;
 }
-.artifactCard_Name {
+.artifact-card-name {
   width: 130px;
   font-size: 18px;
   font-weight: bold;
@@ -172,7 +172,7 @@ input:focus {
   pointer-events: none;
   margin-bottom: 50px;
 }
-.artifactCard_ElemAndWeap {
+.artifact-card-elem-and-weap {
   position: relative;
   height: 40px;
   width: 130px;
@@ -186,7 +186,7 @@ input:focus {
   z-index: 1;
   /* background-color: rgba(255, 255, 255, 0.3); */
 }
-.artifactCard_ElemAndWeap::after {
+.artifact-card-elem-and-weap::after {
   position: absolute;
   top: 5px;
   content: '';

@@ -1,14 +1,22 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onActivated, onDeactivated } from 'vue'
 import * as getImgUrl from '@/utils/getImgUrl'
 import request from '@/utils/request'
 
-/* 响应式数据 */
-const weaponList = ref([])
-const weaponSearchName = ref('')
+const avatarList = ref([])
+const avatarSearchName = ref('')
 const starLvlList = ref([
-  { id: 0, content: '4', active: false },
-  { id: 1, content: '5', active: false },
+  { id: 0, content: 4, active: false },
+  { id: 1, content: 5, active: false },
+])
+const elementList = ref([
+  { id: 0, content: 'pyro', active: false },
+  { id: 1, content: 'hydro', active: false },
+  { id: 2, content: 'anemo', active: false },
+  { id: 3, content: 'electro', active: false },
+  { id: 4, content: 'dendro', active: false },
+  { id: 5, content: 'cryo', active: false },
+  { id: 6, content: 'geo', active: false },
 ])
 const weaponTypeList = ref([
   { id: 0, content: 'sword', active: false },
@@ -18,41 +26,45 @@ const weaponTypeList = ref([
   { id: 4, content: 'bow', active: false },
 ])
 
-const filter_star = computed(() => starLvlList.value.filter((b) => b.active).map((b) => b.content))
-const filter_weapon = computed(() =>
+const filterStar = computed(() => starLvlList.value.filter((b) => b.active).map((b) => b.content))
+const filterElem = computed(() => elementList.value.filter((b) => b.active).map((b) => b.content))
+const filterWeapon = computed(() =>
   weaponTypeList.value.filter((b) => b.active).map((b) => b.content),
 )
 
 const showFilterList = ref(false)
 
-/* 生命周期 */
+let scrollTop = 0
+
 onMounted(async () => {
   try {
-    weaponList.value = await request.get('/weapon/simple_search')
+    avatarList.value = await request.get('/avatar/simple_search')
   } catch (e) {
     console.error('请求失败', e)
   }
 })
 
-/* 监听器 */
-watch([weaponSearchName, filter_weapon, filter_star], fetchWeapons, {
+onDeactivated(() => {
+  scrollTop = window.pageYOffset
+})
+onActivated(() => {
+  window.scrollTo(0, scrollTop)
+})
+
+watch([avatarSearchName, filterElem, filterWeapon, filterStar], fetchAvatars, {
   immediate: true,
 })
 
-/* 方法 */
-async function fetchWeapons() {
+async function fetchAvatars() {
   const qs = new URLSearchParams()
 
-  if (weaponSearchName.value) qs.append('name', weaponSearchName.value)
+  if (avatarSearchName.value) qs.append('name', avatarSearchName.value)
 
-  filter_weapon.value.forEach((w) => qs.append('type', w))
-  filter_star.value.forEach((s) => qs.append('star', s))
+  filterElem.value.forEach((e) => qs.append('elem', e))
+  filterWeapon.value.forEach((w) => qs.append('weapon', w))
+  filterStar.value.forEach((s) => qs.append('star', s))
 
-  const data = await request.get('/weapon/simple_search?' + qs.toString())
-
-  console.log('查询参数', qs.toString())
-
-  weaponList.value = data
+  avatarList.value = await request.get('/avatar/simple_search?' + qs.toString())
 }
 
 function toggle(list, index) {
@@ -63,15 +75,15 @@ function toggle(list, index) {
 <template>
   <div id="body">
     <div id="filter">
-      <button id="filter_btn" @click="showFilterList = !showFilterList">Filter</button>
-      <input class="filter_input" type="text" v-model="weaponSearchName" placeholder="Search..." />
+      <button id="filter-btn" @click="showFilterList = !showFilterList">Filter</button>
+      <input class="filter-input" type="text" v-model="avatarSearchName" placeholder="Search..." />
     </div>
-    <div id="filter_list" v-if="showFilterList">
-      <div class="filter_list_item_box">
-        <span class="filter_list_item_box_title">STAR</span>
-        <div class="filter_list_item_container">
+    <div id="filter-list" v-if="showFilterList">
+      <div class="filter-list-item-box">
+        <span class="filter-list-item-box-title">STAR</span>
+        <div class="filter-list-item-container">
           <button
-            class="filter_list_item"
+            class="filter-list-item"
             :class="{ active: starLvl.active }"
             v-for="(starLvl, i) in starLvlList"
             :key="starLvl.id"
@@ -80,33 +92,48 @@ function toggle(list, index) {
           ></button>
         </div>
       </div>
-      <div class="filter_list_item_box">
-        <span class="filter_list_item_box_title">TYPE</span>
-        <div class="filter_list_item_container">
+      <div class="filter-list-item-box">
+        <span class="filter-list-item-box-title">ELEMENT</span>
+        <div class="filter-list-item-container">
           <button
-            class="filter_list_item"
+            class="filter-list-item"
+            :class="{ active: element.active }"
+            v-for="(element, i) in elementList"
+            :key="element.id"
+            @click="toggle(elementList, i)"
+            :style="{ backgroundImage: `url(${getImgUrl.element(element.content)})` }"
+          ></button>
+        </div>
+      </div>
+      <div class="filter-list-item-box">
+        <span class="filter-list-item-box-title">WEAPON</span>
+        <div class="filter-list-item-container">
+          <button
+            class="filter-list-item"
             :class="{ active: weaponType.active }"
             v-for="(weaponType, i) in weaponTypeList"
             :key="weaponType.id"
             @click="toggle(weaponTypeList, i)"
             :style="{ backgroundImage: `url(${getImgUrl.weaponType(weaponType.content)})` }"
-          >
-            <!-- {{ weaponType.content }} -->
-          </button>
+          ></button>
         </div>
       </div>
     </div>
     <div id="cardBody">
       <button
-        v-for="(weapon, index) in weaponList"
+        v-for="(avatar, index) in avatarList"
         :key="index"
-        class="weaponCard"
-        :style="{ backgroundImage: `url(${getImgUrl.weaponGacha(weapon.name)})` }"
-        @click="$router.push(`/weapons/${weapon.name}`)"
+        class="avatarCard"
+        :style="{ backgroundImage: `url(${getImgUrl.avatarGacha(avatar.name)})` }"
+        @click="$router.push(`/avatars/${avatar.name}`)"
         loading="lazy"
       >
-        <div class="weaponCard_Name">
-          {{ weapon.name }}
+        <div class="avatar-card-name">
+          {{ avatar.name }}
+        </div>
+        <div class="avatar-card-elem-and-weap">
+          <img id="element-icon" :src="getImgUrl.element(avatar.elem)" />
+          <img id="weapon-icon" :src="getImgUrl.weaponType(avatar.weapon)" />
         </div>
       </button>
     </div>
@@ -131,7 +158,6 @@ input:focus {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  /* justify-content: center; */
   align-items: center;
 }
 #filter {
@@ -144,7 +170,7 @@ input:focus {
   align-items: center;
   margin: 20px 0px 15px 0px;
 }
-#filter_btn {
+#filter-btn {
   position: relative;
   height: 50px;
   width: 150px;
@@ -156,12 +182,12 @@ input:focus {
   transition: all 0.1s ease-in-out;
   padding-left: 8px;
 }
-#filter_btn:hover {
+#filter-btn:hover {
   cursor: pointer;
   color: rgba(255, 255, 255, 1);
   transition: all 0.1s ease-in-out;
 }
-#filter_btn::after {
+#filter-btn::after {
   position: absolute;
   content: '';
   top: 10%;
@@ -171,7 +197,7 @@ input:focus {
   background: rgba(255, 255, 255, 0.4);
   z-index: -1;
 }
-.filter_input {
+.filter-input {
   width: 100%;
   height: 20px;
   background-color: transparent;
@@ -183,9 +209,9 @@ input:focus {
   box-sizing: border-box;
   padding-left: 20px;
 }
-#filter_list {
+#filter-list {
   position: relative;
-  height: 270px;
+  height: 400px;
   width: 95vw;
   border: solid 1px rgba(255, 255, 255, 0.2);
   border-radius: 25px;
@@ -196,35 +222,44 @@ input:focus {
   flex-direction: column;
   gap: 20px;
 }
-#filter_list::before {
+#filter-list::before {
   position: absolute;
   content: '';
   width: 95%;
   height: 1px;
-  top: 50%;
+  top: 34%;
   left: 2.5%;
   background: rgba(255, 255, 255, 0.1);
 }
-.filter_list_item_box {
-  height: 50%;
+#filter-list::after {
+  position: absolute;
+  content: '';
+  width: 95%;
+  height: 1px;
+  bottom: 34%;
+  left: 2.5%;
+  background: rgba(255, 255, 255, 0.1);
+}
+.filter-list-item-box {
+  height: 33%;
   width: 100%;
   background: transparent;
   border-radius: 10px;
 }
-.filter_list_item_box_title {
+.filter-list-item-box-title {
   color: rgba(255, 255, 255, 0.5);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 2px;
 }
-.filter_list_item_container {
+.filter-list-item-container {
   height: 90%;
   width: 100%;
   display: flex;
   align-items: center;
   gap: 20px;
 }
-.filter_list_item {
+.filter-list-item {
   width: 60px;
   height: 60px;
   background-size: 40px;
@@ -237,14 +272,14 @@ input:focus {
   /* color: rgba(255, 255, 255, 0.7); */
   color: transparent;
 }
-.filter_list_item:hover {
+.filter-list-item:hover {
   cursor: pointer;
   mask: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
   background-color: rgba(255, 255, 255, 0.1);
   border: solid 1px rgba(255, 255, 255, 0.3);
   transition: all 0.1s ease-in-out;
 }
-.filter_list_item.active {
+.filter-list-item.active {
   cursor: pointer;
   mask: none;
   background-color: rgba(255, 255, 255, 0.1);
@@ -259,7 +294,7 @@ input:focus {
   flex-wrap: wrap;
   justify-content: center;
 }
-.weaponCard {
+.avatarCard {
   position: relative;
   width: 200px;
   height: 600px;
@@ -274,19 +309,17 @@ input:focus {
   align-items: center;
   color: white;
   gap: 10px;
-  background-position: center;
-  /* background-size: cover; */
+  background-size: cover;
   background-repeat: no-repeat;
-  background-size: contain;
   transition: all 0.2s ease-in-out;
 }
-.weaponCard:hover {
+.avatarCard:hover {
   transform: scale(1.01);
   border: solid 1px rgba(255, 255, 255, 0.7);
   box-shadow: 0px 0px 20px 5px rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease-in-out;
 }
-.weaponCard::after {
+.avatarCard::after {
   position: absolute;
   content: '';
   inset: -1px;
@@ -299,7 +332,7 @@ input:focus {
   );
   pointer-events: none;
 }
-.weaponCard_Name {
+.avatar-card-name {
   width: 130px;
   font-size: 18px;
   font-weight: bold;
@@ -308,9 +341,8 @@ input:focus {
   letter-spacing: 5px;
   z-index: 1;
   pointer-events: none;
-  margin-bottom: 100px;
 }
-.weaponCard_type {
+.avatar-card-elem-and-weap {
   position: relative;
   height: 40px;
   width: 130px;
@@ -322,21 +354,42 @@ input:focus {
   margin-bottom: 40px;
   pointer-events: none;
   z-index: 1;
-  /* background-color: rgba(255, 255, 255, 0.3); */
 }
-#weaponIco {
-  width: 50px;
-  height: 50px;
+.avatar-card-elem-and-weap::after {
+  position: absolute;
+  top: 5px;
+  content: '';
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 1) 30%,
+    rgba(255, 255, 255, 1) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  display: flex;
+}
+#element-icon {
+  width: 30px;
+  height: 30px;
+  margin-top: 7px;
+}
+#weapon-icon {
+  width: 35px;
+  height: 35px;
   margin-top: 8px;
 }
+
 @media (pointer: coarse) {
   #filter,
-  #filter_list {
+  #filter-list {
     width: 85%;
   }
-  .weaponCard {
+  .avatarCard {
     width: 40%;
     background-position: center 25%;
+    /* height: 300px; */
   }
 }
 </style>
