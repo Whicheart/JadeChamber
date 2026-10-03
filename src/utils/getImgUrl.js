@@ -1,4 +1,4 @@
-//Avatar
+// 角色立绘与抽卡图
 export function avatarGacha(name) {
   return new URL(`../assets/avatar/${name}/imgs/gacha.webp`, import.meta.url).href
 }
@@ -6,7 +6,7 @@ export function avatarSplash(name) {
   return new URL(`../assets/avatar/${name}/imgs/splash.webp`, import.meta.url).href
 }
 
-// Weapon
+// 武器图片
 export function weaponGacha(name) {
   return new URL(`../assets/weapon/${name}/gacha.webp`, import.meta.url).href
 }

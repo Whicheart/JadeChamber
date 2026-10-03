@@ -1,7 +1,5 @@
 <script setup>
-// import { ref, onMounted, onUnmounted } from 'vue'
 import { onMounted } from 'vue'
-// import axios from 'axios'
 import confetti from 'canvas-confetti'
 
 function startRisingEffect() {
@@ -117,8 +115,6 @@ onMounted(async () => {
   right: 0;
   bottom: 0;
   background-image: url('@/assets/img/hpbg.png');
-  /* background-size: auto 100%; */
-  /* background-size: 100% auto; */
   background-position: 50% 20%;
   background-repeat: no-repeat;
   filter: blur(10px);
@@ -164,7 +160,6 @@ onMounted(async () => {
 #functionCardList {
   width: 80%;
   height: 60%;
-  /* border-radius: 20px; */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -181,12 +176,7 @@ onMounted(async () => {
   width: calc(var(--height) / 3);
   border: none;
   background-color: transparent;
-  /* color: white; */
   font-size: calc(var(--height) / 15);
-  /* font-weight: 700; */
-  /* letter-spacing: 40px; */
-  /* writing-mode: vertical-rl; */
-  /* text-orientation: upright; */
   cursor: pointer;
   animation: float 5s ease-in-out infinite;
   transition: 300ms;
@@ -215,7 +205,6 @@ onMounted(async () => {
   background-size: contain;
   background-repeat: no-repeat;
   opacity: 0;
-  /* filter: blur(10px); */
   filter: none;
   transition: 300ms;
 }
@@ -236,7 +225,6 @@ onMounted(async () => {
 }
 
 #bannerFunctionCard::before {
-  /* background-image: url('@/assets/img/ArtifactLib.png'); */
 }
 
 #avatarFunctionCard::after {
@@ -267,8 +255,6 @@ onMounted(async () => {
 
 .functionCard:hover::after {
   opacity: 1;
-  /* color: aqua; */
-  /* filter: none; */
   filter: drop-shadow(0 0 2px rgb(255, 149, 0)) drop-shadow(0 0 5px rgb(255, 205, 134));
   transition: 500ms;
 }

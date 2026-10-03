@@ -8,7 +8,6 @@ const artifactSearchName = ref('')
 
 onMounted(async () => {
   try {
-    // const res = await axios.get('http://localhost:8080/artifact/search')
     const res = await axios.get('/api/artifact/search')
     artifactList.value = res.data
     console.log('请求成功:', artifactList.value)
@@ -36,9 +35,6 @@ async function fetchArtifacts() {
 
   if (artifactSearchName.value) qs.append('setName', artifactSearchName.value)
 
-  // console.log('查询参数:', qs.toString())
-
-  // const { data } = await axios.get('http://localhost:8080/artifact/search?' + qs.toString())
   const { data } = await axios.get('/api/artifact/search?' + qs.toString())
   artifactList.value = data
 }
@@ -88,7 +84,6 @@ input:focus {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  /* justify-content: center; */
   align-items: center;
 }
 #filter {
@@ -137,7 +132,6 @@ input:focus {
   color: white;
   gap: 10px;
   background-position: center;
-  /* background-size: cover; */
   background-repeat: no-repeat;
   background-size: contain;
   transition: all 0.2s ease-in-out;
@@ -184,7 +178,6 @@ input:focus {
   margin-bottom: 40px;
   pointer-events: none;
   z-index: 1;
-  /* background-color: rgba(255, 255, 255, 0.3); */
 }
 .artifact-card-elem-and-weap::after {
   position: absolute;

@@ -131,7 +131,6 @@ input:focus {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  /* justify-content: center; */
   align-items: center;
 }
 #filter {
@@ -234,7 +233,6 @@ input:focus {
   background-color: transparent;
   border: solid 1px rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  /* color: rgba(255, 255, 255, 0.7); */
   color: transparent;
 }
 .filter-list-item:hover {
@@ -275,7 +273,6 @@ input:focus {
   color: white;
   gap: 10px;
   background-position: center;
-  /* background-size: cover; */
   background-repeat: no-repeat;
   background-size: contain;
   transition: all 0.2s ease-in-out;
@@ -322,7 +319,6 @@ input:focus {
   margin-bottom: 40px;
   pointer-events: none;
   z-index: 1;
-  /* background-color: rgba(255, 255, 255, 0.3); */
 }
 #weapon-ico {
   width: 50px;

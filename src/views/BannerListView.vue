@@ -19,7 +19,6 @@ function safeParse(str) {
 
 onMounted(async () => {
   try {
-    // const res = await axios.get('http://localhost:8080/banner/all')
     const res = await axios.get('/api/banner/all')
     bannerList.value = res.data.map((item) => ({
       ...item,

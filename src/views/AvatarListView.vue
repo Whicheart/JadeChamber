@@ -269,7 +269,6 @@ input:focus {
   background-color: transparent;
   border: solid 1px rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  /* color: rgba(255, 255, 255, 0.7); */
   color: transparent;
 }
 .filter-list-item:hover {
@@ -389,7 +388,6 @@ input:focus {
   .avatarCard {
     width: 40%;
     background-position: center 25%;
-    /* height: 300px; */
   }
 }
 </style>

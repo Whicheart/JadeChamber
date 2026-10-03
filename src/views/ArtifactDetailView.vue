@@ -20,7 +20,6 @@ watch(
 
     try {
       const a = await getConfig()
-      // const { data } = await axios.get(`http://localhost:8080/artifact/search?setName=${name}`)
       const { data } = await axios.get(`/api/artifact/search?setName=${name}`)
       const id = data[0]?.setId
       if (!id) {

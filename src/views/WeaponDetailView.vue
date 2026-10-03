@@ -55,8 +55,8 @@ function routerBack() {
 function setBaseInfo() {
   if (config.value) {
     // 确保为空
-    baseInfo.value[0].value = [] // ATK
-    baseInfo.value[1].value = [] // GROW
+    baseInfo.value[0].value = [] // 基础攻击力
+    baseInfo.value[1].value = [] // 副属性成长值
     // 赋值
     levelOrder.forEach((lvl) => {
       baseInfo.value[0].value.push(config.value.attr.atk[lvl])
@@ -247,7 +247,6 @@ function formattedDesc(affixData) {
   gap: 100px;
   margin-top: 30px;
   padding: 20px;
-  /* padding: 100px 20px 50px 20px; */
   padding-bottom: 50px;
 }
 .weapon_img {
@@ -257,7 +256,6 @@ function formattedDesc(affixData) {
   background-size: contain;
   background-color: transparent;
   background-repeat: no-repeat;
-  /* background-color: #fff; */
 }
 .stat {
   position: absolute;
@@ -288,7 +286,6 @@ function formattedDesc(affixData) {
   font-size: 18px;
   text-align: center;
   color: rgba(255, 255, 255, 0.8);
-  /* font-weight: bold; */
 }
 #base_info_itemId {
   font-size: 16px;
@@ -298,7 +295,6 @@ function formattedDesc(affixData) {
 .base_info {
   width: 100%;
   border: solid 1px rgba(255, 255, 255, 0.1);
-  /* background-color: rgba(255, 255, 255, 0.05); */
   border-radius: 15px;
   font-size: 22px;
   height: 70px;
@@ -349,7 +345,6 @@ function formattedDesc(affixData) {
   height: auto;
   box-sizing: border-box;
   border: solid 1px rgba(255, 255, 255, 0.1);
-  /* background-color: rgba(255, 255, 255, 0.05); */
   border-radius: 15px;
   display: flex;
   flex-direction: row;
@@ -385,7 +380,6 @@ function formattedDesc(affixData) {
 #skill_effect {
   font-size: 20px;
   text-align: center;
-  /* font-weight: bold; */
   box-sizing: border-box;
   padding: 0 50px 0 50px;
 }

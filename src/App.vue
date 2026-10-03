@@ -1,12 +1,12 @@
 <script setup>
-import LogoSrc from '@/assets/img/logo_pic.png'
 import LogoTextSrc from '@/assets/img/logo_text.png'
+
+/* 与 index.html 的 favicon 共用 public 下的同一份资源，避免重复维护 */
+const LogoSrc = '/logo_pic.png'
 
 const headBtnTexts = {
   角色图鉴: 'avatars',
   武器图鉴: 'weapons',
-  // 'artifacts': 'artifacts',
-  // 'banners': 'banners'
   公式大全: 'formulae',
 }
 </script>
@@ -54,7 +54,6 @@ const headBtnTexts = {
   gap: 20px;
   padding-left: clamp(230px, 20vw, 350px);
   box-sizing: border-box;
-  /* z-index: 9999; */
 }
 
 /* Head 下边线 */
@@ -125,7 +124,6 @@ const headBtnTexts = {
   width: auto;
   height: 40px;
   padding: 0 20px 0 20px;
-  /* border: 0.5px solid rgba(255, 255, 255, 0.3); */
   border: 0;
   border-radius: 10px;
   background-color: transparent;
@@ -137,7 +135,6 @@ const headBtnTexts = {
 .head-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 1);
-  /* border: 0.5px solid transparent; */
   border: 0;
   cursor: pointer;
   transition: 200ms;
@@ -145,7 +142,6 @@ const headBtnTexts = {
 .head-btn:focus {
   background-color: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 1);
-  /* border: 0.5px solid transparent; */
   border: 0;
   transition: 100ms;
 }

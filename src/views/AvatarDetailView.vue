@@ -118,10 +118,10 @@ function routerBack() {
 function setBaseInfo() {
   if (config.value) {
     // 确保为空
-    base3DInfo.value[0].value = [] // HP
-    base3DInfo.value[1].value = [] // ATK
-    base3DInfo.value[2].value = [] // DEF
-    base3DInfo.value[3].value = [] // GROW
+    base3DInfo.value[0].value = [] // 基础生命值
+    base3DInfo.value[1].value = [] // 基础攻击力
+    base3DInfo.value[2].value = [] // 基础防御力
+    base3DInfo.value[3].value = [] // 成长属性
     // 赋值
     levelOrder.forEach((lvl) => {
       const ary = config.value.attr.details[lvl]
