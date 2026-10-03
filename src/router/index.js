@@ -4,7 +4,7 @@ import Home from './HomePage.vue'
 import Avatars from './Avatars.vue'
 import Weapons from './Weapons.vue'
 import Artifacts from './Artifacts.vue'
-import Banners  from './Banners.vue'
+import Banners from './Banners.vue'
 import Formulae from './Formulae.vue'
 
 const router = createRouter({

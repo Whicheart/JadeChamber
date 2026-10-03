@@ -202,7 +202,7 @@ input:focus {
   display: flex;
 }
 @media (pointer: coarse) {
-  #filter{
+  #filter {
     width: 85%;
   }
   .artifactCard {

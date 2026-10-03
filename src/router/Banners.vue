@@ -50,8 +50,7 @@ function geAvatarGachaUrl(name) {
             :key="c.name"
             @click="$router.push(`/characters/${c.name}`)"
             :style="{ backgroundImage: `url(${geAvatarGachaUrl(c.name)})` }"
-          >
-          </button>
+          ></button>
         </div>
         <div class="half">
           <div class="half_title">下半</div>
@@ -61,8 +60,7 @@ function geAvatarGachaUrl(name) {
             :key="c.name"
             @click="$router.push(`/characters/${c.name}`)"
             :style="{ backgroundImage: `url(${geAvatarGachaUrl(c.name)})` }"
-          >
-          </button>
+          ></button>
         </div>
       </div>
     </div>
@@ -156,10 +154,10 @@ function geAvatarGachaUrl(name) {
   background-color: transparent;
 }
 @media (pointer: coarse) {
-  .half{
+  .half {
     gap: 10px;
   }
-  .banner_card{
+  .banner_card {
     width: 100%;
   }
 }

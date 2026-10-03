@@ -10,7 +10,14 @@ export default defineConfig([
     files: ['**/*.{vue,js,mjs,jsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/dist-ssr/**',
+    '**/coverage/**',
+    'src/assets/**',
+    '*.report.json',
+    '.vscode/**',
+  ]),
 
   {
     languageOptions: {
@@ -22,13 +29,13 @@ export default defineConfig([
 
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
-  
+
   {
     name: 'app/rules-overrides',
     rules: {
-      'vue/multi-word-component-names': 'off'
-    }
+      'vue/multi-word-component-names': 'off',
+    },
   },
-  
+
   skipFormatting,
 ])

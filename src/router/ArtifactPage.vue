@@ -153,14 +153,14 @@ function getArtifactIconUrl(item, idx) {
   gap: 30px;
   font-size: 20px;
 }
-.artifact_img_items{
+.artifact_img_items {
   background-position: center;
   background-size: 90px auto;
   background-repeat: no-repeat;
 }
 @media (pointer: coarse) {
   #artifact_img_container,
-  #artifact_effect_container{
+  #artifact_effect_container {
     width: 90%;
   }
 }

@@ -17,11 +17,6 @@ export function weaponAwaken(name) {
   return new URL(`../assets/weapon/${name}/awaken.webp`, import.meta.url).href
 }
 
-
-
-
-
-
 export function starLv(starLvl) {
   return new URL(`../assets/starLv/${starLvl}.webp`, import.meta.url).href
 }

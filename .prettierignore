@@ -1,0 +1,12 @@
+# 依赖与构建产物
+node_modules
+dist
+dist-ssr
+coverage
+
+# 静态资源目录（内含大量第三方脚本，见整改项 #3）
+src/assets
+
+# 工具输出与锁文件
+*.report.json
+package-lock.json
