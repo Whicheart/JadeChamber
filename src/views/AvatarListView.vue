@@ -1,393 +1,356 @@
 <script setup>
-import { ref, onMounted, watch, computed, onActivated, onDeactivated } from 'vue'
+// ==========================================
+// 1. 依赖引入
+// ==========================================
+import { ref, computed, watch } from 'vue'
 import * as getImgUrl from '@/utils/getImgUrl'
 import request from '@/utils/request'
 
-const avatarList = ref([])
-const avatarSearchName = ref('')
-const starLvlList = ref([
-  { id: 0, content: 4, active: false },
-  { id: 1, content: 5, active: false },
+// ==========================================
+// 2. 常量与静态配置
+// ==========================================
+// 元素与品质对应的主题色映射表
+const elementColor = {
+  GEO: 'rgb(251, 203, 105)',
+  DENDRO: 'rgb(8, 228, 92)',
+  ELECTRO: 'rgb(219, 147, 255)',
+  PYRO: 'rgb(251, 155, 6)',
+  HYDRO: 'rgb(53, 197, 249)',
+  CRYO: 'rgb(140, 242, 254)',
+  ANEMO: 'rgb(103, 253, 208)',
+  QUALITY_PURPLE: 'rgb(180, 150, 240)',
+  QUALITY_ORANGE: 'rgb(255, 180, 65)',
+}
+
+// ==========================================
+// 3. 响应式状态 (Refs)
+// ==========================================
+// 筛选条件配置表（包含星级、元素、武器三组，通过 active 标记是否选中）
+const filter = ref([
+  {
+    id: 1,
+    title: '星级',
+    buttons: [
+      { id: 11, content: 'QUALITY_PURPLE', iconName: 'Quality_Purple', active: false },
+      { id: 12, content: 'QUALITY_ORANGE', iconName: 'Quality_Orange', active: false },
+    ],
+  },
+  {
+    id: 2,
+    title: '元素类型',
+    buttons: [
+      { id: 21, content: 'PYRO', iconName: 'Element_Pyro', active: false },
+      { id: 22, content: 'HYDRO', iconName: 'Element_Hydro', active: false },
+      { id: 23, content: 'ANEMO', iconName: 'Element_Anemo', active: false },
+      { id: 24, content: 'ELECTRO', iconName: 'Element_Electro', active: false },
+      { id: 25, content: 'DENDRO', iconName: 'Element_Dendro', active: false },
+      { id: 26, content: 'CRYO', iconName: 'Element_Cryo', active: false },
+      { id: 27, content: 'GEO', iconName: 'Element_Geo', active: false },
+    ],
+  },
+  {
+    id: 3,
+    title: '武器类型',
+    buttons: [
+      { id: 31, content: 'WEAPON_SWORD_ONE_HAND', iconName: 'Weapon_Sword', active: false },
+      { id: 32, content: 'WEAPON_CLAYMORE', iconName: 'Weapon_Claymore', active: false },
+      { id: 33, content: 'WEAPON_POLE', iconName: 'Weapon_Polearm', active: false },
+      { id: 34, content: 'WEAPON_CATALYST', iconName: 'Weapon_Catalyst', active: false },
+      { id: 35, content: 'WEAPON_BOW', iconName: 'Weapon_Bow', active: false },
+    ],
+  },
 ])
-const elementList = ref([
-  { id: 0, content: 'pyro', active: false },
-  { id: 1, content: 'hydro', active: false },
-  { id: 2, content: 'anemo', active: false },
-  { id: 3, content: 'electro', active: false },
-  { id: 4, content: 'dendro', active: false },
-  { id: 5, content: 'cryo', active: false },
-  { id: 6, content: 'geo', active: false },
-])
-const weaponTypeList = ref([
-  { id: 0, content: 'sword', active: false },
-  { id: 1, content: 'claymore', active: false },
-  { id: 2, content: 'polearm', active: false },
-  { id: 3, content: 'catalyst', active: false },
-  { id: 4, content: 'bow', active: false },
-])
 
-const filterStar = computed(() => starLvlList.value.filter((b) => b.active).map((b) => b.content))
-const filterElem = computed(() => elementList.value.filter((b) => b.active).map((b) => b.content))
-const filterWeapon = computed(() =>
-  weaponTypeList.value.filter((b) => b.active).map((b) => b.content),
-)
+const showFilterList = ref(false)    // 控制筛选面板的展开/收起
+const avatarSearchName = ref('')     // 搜索框输入的名字
+const avatarList = ref([])           // 最终渲染的角色列表数据
 
-const showFilterList = ref(false)
+// ==========================================
+// 4. 计算属性 (Computed)
+// ==========================================
+// 辅助函数：根据分组 ID 提取当前激活的按钮值（返回如 ['PYRO', 'HYDRO']）
+function getActiveFilter(groupId) {
+  const group = filter.value.find((g) => g.id === groupId)
+  if (!group) return []
+  return group.buttons.filter((b) => b.active).map((b) => b.content)
+}
 
-let scrollTop = 0
+// 实时获取三大类筛选条件的选中值
+const filterStar = computed(() => getActiveFilter(1))    // 星级
+const filterElem = computed(() => getActiveFilter(2))    // 元素
+const filterWeapon = computed(() => getActiveFilter(3))  // 武器
 
-onMounted(async () => {
-  try {
-    avatarList.value = await request.get('/avatar/simple_search')
-  } catch (e) {
-    console.error('请求失败', e)
-  }
-})
-
-onDeactivated(() => {
-  scrollTop = window.pageYOffset
-})
-onActivated(() => {
-  window.scrollTo(0, scrollTop)
-})
-
-watch([avatarSearchName, filterElem, filterWeapon, filterStar], fetchAvatars, {
-  immediate: true,
-})
-
+// ==========================================
+// 5. 核心方法 (Methods)
+// ==========================================
+// 请求后端接口获取角色列表
 async function fetchAvatars() {
   const qs = new URLSearchParams()
 
+  // 拼装请求参数
   if (avatarSearchName.value) qs.append('name', avatarSearchName.value)
+  filterElem.value.forEach((e) => qs.append('elements', e))
+  filterWeapon.value.forEach((w) => qs.append('weaponTypes', w))
+  filterStar.value.forEach((s) => qs.append('qualityTypes', s))
 
-  filterElem.value.forEach((e) => qs.append('elem', e))
-  filterWeapon.value.forEach((w) => qs.append('weapon', w))
-  filterStar.value.forEach((s) => qs.append('star', s))
-
-  avatarList.value = await request.get('/avatar/simple_search?' + qs.toString())
+  // 避免空参数时 URL 尾部多出一个 "?"，直接请求基础路径
+  const qsStr = qs.toString()
+  avatarList.value = await request.get('/api/avatar/list' + (qsStr ? '?' + qsStr : ''))
 }
 
-function toggle(list, index) {
-  list[index].active = !list[index].active
-}
+// ==========================================
+// 6. 侦听器 (Watchers)
+// ==========================================
+// 监听搜索框输入，做 300ms 防抖处理
+let searchTimer = null
+watch(avatarSearchName, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    fetchAvatars()
+  }, 300)
+})
+
+// 监听筛选条件变化，一旦勾选/取消，立刻触发请求
+// immediate: true 保证组件首次加载时立刻拉取全量列表
+watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
 </script>
 
 <template>
-  <div id="body">
-    <div id="filter">
-      <button id="filter-btn" @click="showFilterList = !showFilterList">Filter</button>
-      <input class="filter-input" type="text" v-model="avatarSearchName" placeholder="Search..." />
-    </div>
-    <div id="filter-list" v-if="showFilterList">
-      <div class="filter-list-item-box">
-        <span class="filter-list-item-box-title">STAR</span>
-        <div class="filter-list-item-container">
-          <button
-            class="filter-list-item"
-            :class="{ active: starLvl.active }"
-            v-for="(starLvl, i) in starLvlList"
-            :key="starLvl.id"
-            @click="toggle(starLvlList, i)"
-            :style="{ backgroundImage: `url(${getImgUrl.starLv(starLvl.content)})` }"
-          ></button>
-        </div>
+  <!-- ==========================================
+       1. 顶部搜索与筛选控制栏
+  =========================================== -->
+  <div id="filter">
+    <!-- 筛选面板展开/收起开关 -->
+    <button
+      id="filter-open-btn"
+      :class="{ open: showFilterList }"
+      @click="showFilterList = !showFilterList"
+    ></button>
+    <!-- 角色名字模糊搜索框 -->
+    <input
+      id="filter-input"
+      v-model="avatarSearchName"
+      type="text"
+      placeholder="搜索角色..."
+    />
+  </div>
+
+  <!-- ==========================================
+       2. 可折叠的筛选条件面板（星级/元素/武器）
+  =========================================== -->
+  <div id="filter-item-box" v-if="showFilterList">
+    <div
+      class="filter-type"
+      v-for="list in filter"
+      :key="list.id"
+    >
+      <h3>{{ list.title }}</h3>
+      <div class="filter-buttons">
+        <!-- 
+          筛选按钮使用 CSS Mask (遮罩) 技术。
+          这样可以通过改变背景色，让原本单色的图标变成任意指定的颜色。
+          --active-color 变量用于将激活状态的颜色动态传递给 CSS。
+        -->
+        <button
+          v-for="btn in list.buttons"
+          :key="btn.id"
+          class="filter-btn"
+          :class="{ active: btn.active }"
+          :style="{
+            maskImage: `url(${getImgUrl.filter(btn.iconName)})`,
+            WebkitMaskImage: `url(${getImgUrl.filter(btn.iconName)})`,
+            '--active-color': elementColor[btn.content] || 'var(--clr-white)',
+          }"
+          @click="btn.active = !btn.active"
+        ></button>
       </div>
-      <div class="filter-list-item-box">
-        <span class="filter-list-item-box-title">ELEMENT</span>
-        <div class="filter-list-item-container">
-          <button
-            class="filter-list-item"
-            :class="{ active: element.active }"
-            v-for="(element, i) in elementList"
-            :key="element.id"
-            @click="toggle(elementList, i)"
-            :style="{ backgroundImage: `url(${getImgUrl.element(element.content)})` }"
-          ></button>
-        </div>
-      </div>
-      <div class="filter-list-item-box">
-        <span class="filter-list-item-box-title">WEAPON</span>
-        <div class="filter-list-item-container">
-          <button
-            class="filter-list-item"
-            :class="{ active: weaponType.active }"
-            v-for="(weaponType, i) in weaponTypeList"
-            :key="weaponType.id"
-            @click="toggle(weaponTypeList, i)"
-            :style="{ backgroundImage: `url(${getImgUrl.weaponType(weaponType.content)})` }"
-          ></button>
-        </div>
-      </div>
     </div>
-    <div id="cardBody">
-      <button
-        v-for="(avatar, index) in avatarList"
-        :key="index"
-        class="avatarCard"
-        :style="{ backgroundImage: `url(${getImgUrl.avatarGacha(avatar.name)})` }"
-        @click="$router.push(`/avatars/${avatar.name}`)"
-        loading="lazy"
-      >
-        <div class="avatar-card-name">
-          {{ avatar.name }}
-        </div>
-        <div class="avatar-card-elem-and-weap">
-          <img id="element-icon" :src="getImgUrl.element(avatar.elem)" />
-          <img id="weapon-icon" :src="getImgUrl.weaponType(avatar.weapon)" />
-        </div>
-      </button>
-    </div>
+  </div>
+
+  <!-- ==========================================
+       3. 角色卡片列表展示区
+  =========================================== -->
+  <div id="avatar-list-box">
+    <!-- 角色卡片，点击跳转到对应详情页 -->
+    <button
+      v-for="(avatar, index) in avatarList"
+      :key="index"
+      class="avatar-card"
+      :style="{ backgroundImage: `url(${getImgUrl.avatarIcon(avatar.GachaIconName)})` }"
+      @click="$router.push(`/avatar/${avatar.id}`)"
+    >
+      {{ avatar.name }}
+    </button>
   </div>
 </template>
 
 <style scoped>
 * {
-  font-family: '微软雅黑';
-}
-input:focus {
-  outline: none;
-  border: none;
-}
-#body {
-  width: 100vw;
-  height: auto;
-  min-width: 800px;
-  min-height: 650px;
-  margin-top: 70px;
-  background-color: transparent;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-}
-#filter {
-  width: 95vw;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  border: solid 1px rgba(255, 255, 255, 0.4);
-  border-radius: 25px;
-  align-items: center;
-  margin: 20px 0px 15px 0px;
-}
-#filter-btn {
-  position: relative;
-  height: 50px;
-  width: 150px;
-  padding: 0;
-  font-size: 20px;
-  background-color: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  transition: all 0.1s ease-in-out;
-  padding-left: 8px;
-}
-#filter-btn:hover {
-  cursor: pointer;
-  color: rgba(255, 255, 255, 1);
-  transition: all 0.1s ease-in-out;
-}
-#filter-btn::after {
-  position: absolute;
-  content: '';
-  top: 10%;
-  right: 0px;
-  width: 1px;
-  height: 80%;
-  background: rgba(255, 255, 255, 0.4);
-  z-index: -1;
-}
-.filter-input {
-  width: 100%;
-  height: 20px;
-  background-color: transparent;
-  color: white;
-  font-size: 16px;
-  font-weight: 700;
-  padding: 10px;
-  border: none;
-  box-sizing: border-box;
-  padding-left: 20px;
-}
-#filter-list {
-  position: relative;
-  height: 400px;
-  width: 95vw;
-  border: solid 1px rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-#filter-list::before {
-  position: absolute;
-  content: '';
-  width: 95%;
-  height: 1px;
-  top: 34%;
-  left: 2.5%;
-  background: rgba(255, 255, 255, 0.1);
-}
-#filter-list::after {
-  position: absolute;
-  content: '';
-  width: 95%;
-  height: 1px;
-  bottom: 34%;
-  left: 2.5%;
-  background: rgba(255, 255, 255, 0.1);
-}
-.filter-list-item-box {
-  height: 33%;
-  width: 100%;
-  background: transparent;
-  border-radius: 10px;
-}
-.filter-list-item-box-title {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 2px;
-}
-.filter-list-item-container {
-  height: 90%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.filter-list-item {
-  width: 60px;
-  height: 60px;
-  background-size: 40px;
-  background-position: center;
-  background-repeat: no-repeat;
-  mask: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
-  background-color: transparent;
-  border: solid 1px rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: transparent;
-}
-.filter-list-item:hover {
-  cursor: pointer;
-  mask: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
-  background-color: rgba(255, 255, 255, 0.1);
-  border: solid 1px rgba(255, 255, 255, 0.3);
-  transition: all 0.1s ease-in-out;
-}
-.filter-list-item.active {
-  cursor: pointer;
-  mask: none;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: solid 1px rgba(255, 255, 255, 0.3);
-  transition: all 0.1s ease-in-out;
-}
-#cardBody {
-  width: 100%;
-  height: auto;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.avatarCard {
-  position: relative;
-  width: 200px;
-  height: 600px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  margin: 10px;
-  display: flex;
-  border: 0;
-  cursor: pointer;
-  flex-direction: column;
-  justify-content: end;
-  align-items: center;
-  color: white;
-  gap: 10px;
-  background-size: cover;
-  background-repeat: no-repeat;
-  transition: all 0.2s ease-in-out;
-}
-.avatarCard:hover {
-  transform: scale(1.01);
-  border: solid 1px rgba(255, 255, 255, 0.7);
-  box-shadow: 0px 0px 20px 5px rgba(255, 255, 255, 0.5);
-  transition: all 0.2s ease-in-out;
-}
-.avatarCard::after {
-  position: absolute;
-  content: '';
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.5) 25%,
-    transparent 50%
-  );
-  pointer-events: none;
-}
-.avatar-card-name {
-  width: 130px;
-  font-size: 18px;
-  font-weight: bold;
-  display: flex;
-  justify-content: center;
-  letter-spacing: 5px;
-  z-index: 1;
-  pointer-events: none;
-}
-.avatar-card-elem-and-weap {
-  position: relative;
-  height: 40px;
-  width: 130px;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 40px;
-  pointer-events: none;
-  z-index: 1;
-}
-.avatar-card-elem-and-weap::after {
-  position: absolute;
-  top: 5px;
-  content: '';
-  width: 1px;
-  height: 40px;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 1) 30%,
-    rgba(255, 255, 255, 1) 70%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  display: flex;
-}
-#element-icon {
-  width: 30px;
-  height: 30px;
-  margin-top: 7px;
-}
-#weapon-icon {
-  width: 35px;
-  height: 35px;
-  margin-top: 8px;
+  /* 颜色 */
+  --clr-border: var(--clr-white-30);
+  --clr-background: var(--clr-black-90);
+  --clr-color: var(--clr-white);
+
+  /* 尺寸 */
+  --wid-filter-open-btn: 50px;
+  --wid-filter-input: 50vw;
+  --wid-avatar-card: 160px;
+  --wid-max: calc(var(--wid-filter-open-btn) + var(--wid-filter-input));
+
+  /* 位置 */
+  --pos-filter-top: 60px;
+  --pos-filter-list-top: calc(var(--pos-filter-top) + 60px);
+
+  /* 渐隐 */
+  --num-avatar-list-box-gradient-stops: 20px;
 }
 
-@media (pointer: coarse) {
-  #filter,
-  #filter-list {
-    width: 85%;
-  }
-  .avatarCard {
-    width: 40%;
-    background-position: center 25%;
-  }
+#filter {
+  position: fixed;
+  top: var(--pos-filter-top);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
+
+#filter-open-btn {
+  position: relative;
+  width: var(--wid-filter-open-btn);
+  height: 40px;
+  background-image: url('@/assets/img/icon-filter-expand.svg');
+  background-size: 60%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--clr-background);
+  border: 1px solid var(--clr-border);
+  border-right: none;
+  border-radius: 20px 0px 0px 20px;
+  cursor: pointer;
+  transition: 150ms;
+}
+
+#filter-open-btn.open {
+  background-image: url('@/assets/img/icon-filter-collapse.svg');
+  transition: 150ms;
+}
+
+#filter-open-btn::after {
+  position: absolute;
+  top: 10%;
+  right: 0px;
+  content: '';
+  width: 1px;
+  height: 80%;
+  background-color: var(--clr-border);
+}
+
+#filter-input {
+  width: var(--wid-filter-input);
+  height: 40px;
+  padding: 5px 10px;
+  background-color: var(--clr-background);
+  border: 1px solid var(--clr-border);
+  border-left: none;
+  border-radius: 0px 20px 20px 0px;
+  color: var(--clr-color);
+}
+
+#filter-input:focus {
+  outline: none;
+}
+
+#filter-item-box {
+  position: fixed;
+  top: var(--pos-filter-list-top);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: var(--wid-max);
+  padding: 10px 20px 20px;
+  background-color: var(--clr-background);
+  border: 1px solid var(--clr-border);
+  border-radius: 20px;
+}
+
+.filter-type {
+  position: relative;
+  letter-spacing: 0.2em;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.filter-btn {
+  width: 40px;
+  height: 40px;
+  background-color: var(--clr-white-60);
+  mask-size: 90%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 90%;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  border: 1px solid var(--clr-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 150ms;
+}
+
+.filter-btn.active {
+  background-color: var(--active-color);
+  box-shadow:
+    0 0 6px var(--active-color),
+    0 0 16px var(--active-color);
+  transition: 150ms;
+}
+
+#avatar-list-box {
+  width: 100vw;
+  height: 80vh;
+  padding: 0px calc(calc(100vw - var(--wid-max)) / 2);
+  padding-top: 20px;
+  padding-bottom: 20px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--wid-avatar-card), 1fr));
+  gap: 20px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--num-avatar-list-box-gradient-stops),
+    #000 calc(100% - var(--num-avatar-list-box-gradient-stops)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--num-avatar-list-box-gradient-stops),
+    #000 calc(100% - var(--num-avatar-list-box-gradient-stops)),
+    transparent 100%
+  );
+}
+
+.avatar-card {
+  width: var(--wid-avatar-card);
+  height: 400px;
+  background-color: transparent;
+  background-image: none;
+  background-size: 105% auto;
+  background-position: center 20%;
+  background-repeat: no-repeat;
+  color: var(--clr-color);
+  border: none;
+  transition: 200ms;
+}
+
+.avatar-card:hover {
+  background-size: 100% auto;
+  transition: 200ms;
 }
 </style>

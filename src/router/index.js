@@ -12,47 +12,38 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
       component: Home,
     },
     {
       path: '/avatars',
-      name: 'avatars',
       component: AvatarList,
     },
     {
       path: '/weapons',
-      name: 'weapons',
       component: WeaponList,
     },
     {
       path: '/artifacts',
-      name: 'artifacts',
       component: ArtifactList,
     },
     {
       path: '/banners',
-      name: 'banners',
       component: BannerList,
     },
     {
       path: '/formulae',
-      name: 'formulae',
       component: Formulae,
     },
     {
-      path: '/avatars/:avatarName',
-      name: 'avatarPage',
+      path: '/avatar/:avatarId',
       component: () => import('@/views/AvatarDetailView.vue'),
     },
     {
       path: '/weapons/:weaponName',
-      name: 'weaponPage',
       component: () => import('@/views/WeaponDetailView.vue'),
     },
     {
       path: '/artifacts/:artifactName',
-      name: 'artifactPage',
       component: () => import('@/views/ArtifactDetailView.vue'),
     },
   ],

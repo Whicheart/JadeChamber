@@ -5,7 +5,6 @@ const request = axios.create({
   timeout: 10000,
 })
 
-// 统一解包后端 Result 信封：成功直接返回 data，失败抛出错误
 request.interceptors.response.use(
   (response) => {
     const body = response.data

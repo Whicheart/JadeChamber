@@ -1,9 +1,13 @@
-// 角色立绘与抽卡图
-export function avatarGacha(name) {
-  return new URL(`../assets/avatar/${name}/imgs/gacha.webp`, import.meta.url).href
-}
-export function avatarSplash(name) {
-  return new URL(`../assets/avatar/${name}/imgs/splash.webp`, import.meta.url).href
+export function avatarIcon(fileName) {
+  if (!fileName) return ''
+  
+  // 1. 去掉前缀
+  let cleanName = fileName.replace('UI_AvatarIcon_', '')
+  
+  // 2. 用下划线切割取第 0 项
+  let avatarName = cleanName.split('_')[0]
+  
+  return new URL(`../assets/img/avatar/${avatarName}/${fileName}.webp`, import.meta.url).href
 }
 
 // 武器图片
@@ -17,14 +21,9 @@ export function weaponAwaken(name) {
   return new URL(`../assets/weapon/${name}/awaken.webp`, import.meta.url).href
 }
 
-export function starLv(starLvl) {
-  return new URL(`../assets/starLv/${starLvl}.webp`, import.meta.url).href
-}
-export function element(element) {
-  return new URL(`../assets/element/${element}.png`, import.meta.url).href
-}
-export function weaponType(weapon) {
-  return new URL(`../assets/weaponType/${weapon}.png`, import.meta.url).href
+// 过滤器
+export function filter(name) {
+  return new URL(`../assets/img/filter/UI_FilterIcon_${name}.webp`, import.meta.url).href
 }
 
 export function material(name, type) {

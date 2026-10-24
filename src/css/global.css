@@ -1,0 +1,50 @@
+:root{
+    --clr-transparent: rgba(000, 000, 000, 0);
+    --clr-black:       rgba(000, 000, 000, 1);
+    --clr-white:       rgba(255, 255, 255, 1);
+
+    --clr-black-10: rgba(0, 0, 0, 0.10);
+    --clr-black-20: rgba(0, 0, 0, 0.20);
+    --clr-black-30: rgba(0, 0, 0, 0.30);
+    --clr-black-40: rgba(0, 0, 0, 0.40);
+    --clr-black-50: rgba(0, 0, 0, 0.50);
+    --clr-black-60: rgba(0, 0, 0, 0.60);
+    --clr-black-70: rgba(0, 0, 0, 0.70);
+    --clr-black-80: rgba(0, 0, 0, 0.80);
+    --clr-black-90: rgba(0, 0, 0, 0.90);
+
+    --clr-gray-10: rgba(026, 026, 026, 1);
+    --clr-gray-20: rgba(051, 051, 051, 1);
+    --clr-gray-30: rgba(077, 077, 077, 1);
+    --clr-gray-40: rgba(102, 102, 102, 1);
+    --clr-gray-50: rgba(128, 128, 128, 1);
+    --clr-gray-60: rgba(153, 153, 153, 1);
+    --clr-gray-70: rgba(179, 179, 179, 1);
+    --clr-gray-80: rgba(204, 204, 204, 1);
+    --clr-gray-90: rgba(230, 230, 230, 1);
+
+    --clr-white-10: rgba(255, 255, 255, 0.10);
+    --clr-white-20: rgba(255, 255, 255, 0.20);
+    --clr-white-30: rgba(255, 255, 255, 0.30);
+    --clr-white-40: rgba(255, 255, 255, 0.40);
+    --clr-white-50: rgba(255, 255, 255, 0.50);
+    --clr-white-60: rgba(255, 255, 255, 0.60);
+    --clr-white-70: rgba(255, 255, 255, 0.70);
+    --clr-white-80: rgba(255, 255, 255, 0.80);
+    --clr-white-90: rgba(255, 255, 255, 0.90);
+}
+
+@font-face {
+  font-family: 'HYWenHei-85W';
+  src: url('@/assets/fonts/HYWenHei-85W.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'HYWenHei-85W';
+}
