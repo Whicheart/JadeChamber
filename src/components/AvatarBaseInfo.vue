@@ -91,10 +91,10 @@ const powerText = computed(() => pick(info.value.power?.befor, info.value.power?
 const cvList = computed(() => {
   const cv = info.value.cv || {}
   return [
-    { label: '中文', value: cv.cn },
-    { label: '英文', value: cv.en },
-    { label: '日文', value: cv.jp },
-    { label: '韩文', value: cv.kr },
+    { label: '汉语', value: cv.cn },
+    { label: '英语', value: cv.en },
+    { label: '日语', value: cv.jp },
+    { label: '韩语', value: cv.kr },
   ].map((item) => ({ ...item, value: item.value || '—' }))
 })
 
@@ -411,6 +411,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 
 .splash-box {
   width: 46%;
+  height: 560px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -418,7 +419,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 }
 
 .splash {
-  height: 560px;
+  height: 100%;
   width: auto;
   max-width: none;
   object-fit: contain;
