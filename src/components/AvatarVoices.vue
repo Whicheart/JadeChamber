@@ -20,6 +20,38 @@ function textLines(text) {
     .map((line) => line.trim())
     .filter((line) => line !== '')
 }
+
+// ========== 文本处理 ==========
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// 只认 <color=#RRGGBB(AA)> </color> <i> </i> 四种标签，其余内容一律转义
+const INLINE_TAG_RE = /<color=#([0-9A-Fa-f]{6,8})>|<\/color>|<i>|<\/i>/g
+
+function lineToHtml(line) {
+  let html = ''
+  let last = 0
+  let match = INLINE_TAG_RE.exec(line)
+
+  while (match) {
+    html += escapeHtml(line.slice(last, match.index))
+    if (match[1]) html += `<span style="color:#${match[1]}">`
+    else if (match[0] === '</color>') html += '</span>'
+    else if (match[0] === '<i>') html += '<em>'
+    else html += '</em>'
+    last = INLINE_TAG_RE.lastIndex
+    match = INLINE_TAG_RE.exec(line)
+  }
+
+  html += escapeHtml(line.slice(last))
+  return html
+}
+
+// 每行先剥掉 LINK 外壳再还原颜色高亮与斜体
+function textHtml(text) {
+  return textLines(text).map((line) => lineToHtml(line.replace(/\{LINK#[^}]*\}|\{\/LINK\}/g, '')))
+}
 </script>
 
 <template>
@@ -31,7 +63,7 @@ function textLines(text) {
         <div v-for="(item, index) in dailies" :key="`d-${index}`" class="voice-item">
           <div class="voice-title">{{ item.title }}</div>
           <div class="voice-text">
-            <p v-for="(line, i) in textLines(item.text)" :key="i">{{ line }}</p>
+            <p v-for="(line, i) in textHtml(item.text)" :key="i" v-html="line"></p>
           </div>
         </div>
       </div>
@@ -44,7 +76,7 @@ function textLines(text) {
         <div v-for="(item, index) in battles" :key="`b-${index}`" class="voice-item">
           <div class="voice-title">{{ item.title }}</div>
           <div class="voice-text">
-            <p v-for="(line, i) in textLines(item.text)" :key="i">{{ line }}</p>
+            <p v-for="(line, i) in textHtml(item.text)" :key="i" v-html="line"></p>
           </div>
         </div>
       </div>
@@ -107,5 +139,10 @@ function textLines(text) {
 
 .voice-text p + p {
   margin-top: 4px;
+}
+
+.voice-text :deep(em) {
+  font-style: italic;
+  color: var(--clr-white-50);
 }
 </style>
