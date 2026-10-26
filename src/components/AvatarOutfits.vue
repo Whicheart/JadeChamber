@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import * as getImgUrl from '@/utils/getImgUrl'
 
 const props = defineProps({
@@ -27,28 +27,69 @@ const dirName = computed(
       .split('_')[0],
 )
 
-// 少数角色把第二套装扮存成了 Splash_0，因此按候选顺序逐张回退
+// 少数角色的立绘编号与装扮序号是错开的：第一套非默认时装没有独立立绘（固定占位），
+// 立绘从第二套非默认时装开始，且文件名序号等于装扮序号（普通角色要 +1）
+const FIRST_SKIN_WITHOUT_ART = new Set(['Qin', 'Mona', 'Rosaria', 'Ambor']) // 琴、莫娜、罗莎莉亚、安柏
+
 function splashCandidates(item) {
   const dir = dirName.value
   if (!dir) return []
 
   const base = `UI_AvatarIcon_${dir}_Splash`
-  const order = item?.indexID == null ? 1 : Number(item.indexID) + 1
-  const names = order > 1 ? [`${base}_${order}`, `${base}_0`] : [base]
+  const index = item?.indexID == null ? 0 : Number(item.indexID)
 
-  return names.map((name) => getImgUrl.avatarIcon(name))
+  // 默认装扮：立绘就是角色本体那张
+  if (!index) return [getImgUrl.avatarIcon(base)]
+
+  // 错位角色：第一套非默认时装固定无立绘，之后立绘序号与装扮序号对齐
+  if (FIRST_SKIN_WITHOUT_ART.has(dir)) {
+    return index === 1 ? [] : [getImgUrl.avatarIcon(`${base}_${index}`)]
+  }
+
+  // 普通角色：第 N 套装扮用 Splash_(N+1)，个别角色第二套存成了 Splash_0
+  return [`${base}_${index + 1}`, `${base}_0`].map((name) => getImgUrl.avatarIcon(name))
 }
 
-// 每套装扮记一个失败次数，第 1 张加载不出来就换第 2 张，都失败则退回占位
-const failedCount = reactive({})
+// 每套立绘的探测结果：loading 探测中 / ok 有图 / missing 无图
+const artState = reactive({})
 
-function splashUrl(item) {
-  const candidates = splashCandidates(item)
-  return candidates[failedCount[item.id] ?? 0] || ''
+function artOf(item) {
+  return artState[item.id] || { status: 'loading', url: '' }
 }
 
+// 缺图时 vite 会拿 SPA 回退页冒充资源（200 + text/html），所以只认真图片响应，
+// 否则 <img> 会把整页 HTML 当图解码失败，露出一张破图 + alt 文本
+async function isImage(url) {
+  try {
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok && String(res.headers.get('content-type') || '').startsWith('image/')
+  } catch {
+    return false
+  }
+}
+
+// 按候选顺序逐张探测，第一张真实存在的图片胜出；全都没有就落到占位框
+async function resolveArt(item) {
+  for (const url of splashCandidates(item)) {
+    if (await isImage(url)) {
+      artState[item.id] = { status: 'ok', url }
+      return
+    }
+  }
+  artState[item.id] = { status: 'missing', url: '' }
+}
+
+watch(
+  list,
+  (items) => {
+    items.forEach((item) => resolveArt(item))
+  },
+  { immediate: true },
+)
+
+// 兜底：探测通过但浏览器仍加载失败时，直接退回占位框
 function onSplashError(item) {
-  failedCount[item.id] = (failedCount[item.id] ?? 0) + 1
+  artState[item.id] = { status: 'missing', url: '' }
 }
 
 // 品质：4 → 四星，5 → 五星，缺省不显示
@@ -96,14 +137,16 @@ function descHtml(text) {
   <div id="avatar-outfits">
     <section v-for="item in list" :key="item.id" class="panel">
       <img
-        v-if="splashUrl(item)"
+        v-if="artOf(item).status === 'ok'"
         class="splash"
-        :src="splashUrl(item)"
+        :src="artOf(item).url"
         :alt="item.name + ' 装扮立绘'"
         loading="lazy"
         @error="onSplashError(item)"
       />
-      <div v-else class="splash splash-placeholder">该时装无立绘</div>
+      <div v-else class="splash splash-placeholder">
+        {{ artOf(item).status === 'missing' ? '该时装无立绘' : '' }}
+      </div>
 
       <div class="card-head">
         <h2 class="panel-title">{{ item.name }}</h2>
@@ -161,7 +204,8 @@ function descHtml(text) {
   border: 1px dashed var(--clr-white-20);
   background-color: var(--clr-white-10);
   color: var(--clr-white-50);
-  font-size: 13px;
+  font-size: 16px;
+  letter-spacing: 1px;
 }
 
 .panel-title {
