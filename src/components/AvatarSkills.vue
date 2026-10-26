@@ -1,7 +1,8 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import * as format from '@/utils/format'
 import * as getImgUrl from '@/utils/getImgUrl'
+import { hasImage } from '@/utils/hasImage'
 
 const props = defineProps({
   skills: {
@@ -19,16 +20,19 @@ const props = defineProps({
 const data = computed(() => props.skills || {})
 
 // ========== 技能分类 ==========
-// skillIconName 前缀决定归属：Skill_A 普攻、Skill_S 战技、Skill_E 爆发
+// 归属看 skillIconName：新命名 Talent_NormalAttack / Talent_ElementSkill / Talent_ElementBurst，
+// 旧命名 Skill_A / Skill_S / Skill_E（旧命名没有对应素材）
 const SKILL_TYPES = [
-  { prefix: 'Skill_A', label: '普通攻击' },
-  { prefix: 'Skill_S', label: '元素战技' },
-  { prefix: 'Skill_E', label: '元素爆发' },
+  { patterns: ['Skill_A', 'Talent_NormalAttack'], label: '普通攻击' },
+  { patterns: ['Skill_S', 'Talent_ElementSkill'], label: '元素战技' },
+  { patterns: ['Skill_E', 'Talent_ElementBurst'], label: '元素爆发' },
 ]
 
 function typeOrder(skill) {
   const icon = String(skill?.skillIconName || skill?.icon || '')
-  const index = SKILL_TYPES.findIndex((item) => icon.startsWith(item.prefix))
+  const index = SKILL_TYPES.findIndex((item) =>
+    item.patterns.some((pattern) => icon.includes(pattern)),
+  )
   return index < 0 ? SKILL_TYPES.length : index
 }
 
@@ -38,7 +42,9 @@ const combatSkills = computed(() =>
 )
 
 // ========== 技能图标 ==========
-// 普通攻击没有专属图标素材，改用角色武器类型的过滤器图标
+// 接口给的是资源文件名（如 UI_AvatarIcon_Ayaka_Talent_ElementSkill），目录规则与角色头像一致；
+// 旧命名（如 Skill_S_Ayaka_02）没有对应素材，只能继续占位。
+// 普通攻击若没有专属素材，退回角色武器类型的过滤器图标。
 const WEAPON_FILTER_ICON = {
   单手剑: 'Weapon_Sword',
   双手剑: 'Weapon_Claymore',
@@ -52,10 +58,49 @@ const normalAttackIconUrl = computed(() => {
   return iconName ? getImgUrl.filter(iconName) : ''
 })
 
-// 只有普通攻击（Skill_A）用武器图标，战技/爆发暂无素材，继续占位
-function skillIconUrl(skill) {
-  return typeOrder(skill) === 0 ? normalAttackIconUrl.value : ''
+// 素材按需陆续补充，缺失是常态：先探测文件是否真是图片，再决定渲染图标还是占位框。
+// 优先级：专属技能图标 → 普攻的武器类型图标 → 占位框
+const iconState = reactive({})
+const pendingIcons = new Set()
+
+function iconCandidates(skill) {
+  const urlList = []
+  const iconName = String(skill?.skillIconName || '')
+
+  if (iconName.startsWith('UI_AvatarIcon_')) urlList.push(getImgUrl.avatarIcon(iconName))
+  if (typeOrder(skill) === 0 && normalAttackIconUrl.value) urlList.push(normalAttackIconUrl.value)
+
+  return urlList
 }
+
+async function resolveSkillIcon(skill) {
+  const id = skill?.id
+  if (!id || pendingIcons.has(id)) return
+
+  pendingIcons.add(id)
+
+  for (const url of iconCandidates(skill)) {
+    if (await hasImage(url)) {
+      iconState[id] = { status: 'ok', url }
+      pendingIcons.delete(id)
+      return
+    }
+  }
+
+  iconState[id] = { status: 'missing', url: '' }
+  pendingIcons.delete(id)
+}
+
+// loading 期间先渲染空占位框，避免图标与占位框来回闪
+function skillIcon(skill) {
+  return iconState[skill?.id] || { status: 'loading', url: '' }
+}
+
+function onSkillIconError(skill) {
+  iconState[skill.id] = { status: 'missing', url: '' }
+}
+
+watch(combatSkills, (list) => list.forEach(resolveSkillIcon), { immediate: true })
 
 // ========== 技能等级 ==========
 // 每个技能单独记一个等级，默认 10
@@ -124,7 +169,8 @@ function descHtml(text) {
 }
 
 // ========== 数值行 ==========
-// 形如 "一段伤害|{param1:F1P}"，或 "重击伤害|{param8:F1P}*3"
+// 形如 "一段伤害|{param1:F1P}"，或 "2枚光幕攻击伤害|({param6:F1P}攻击力+{param7:F1P}元素精通)*2"。
+// 只把 {paramN:FMT} 换成数值，模板里其余字符（+ * / 单位文字）原样保留，不参与任何运算
 function paramRows(skillData) {
   const descList = skillData?.paramDescList || []
   const params = skillData?.paramList || []
@@ -132,17 +178,9 @@ function paramRows(skillData) {
   return descList.map((entry) => {
     const [label, template = ''] = String(entry).split('|')
 
-    // 模板里的 *N 表示该数值要乘 N 次
-    const multMatch = template.match(/\*(\d+)/)
-    const mult = multMatch ? Number(multMatch[1]) : 1
-
-    const value = template
-      .replace(/\{param(\d+):([^}]+)\}/g, (_, index, fmt) => {
-        const raw = Number(params[Number(index) - 1]) || 0
-        return format.statValue(fmt, raw * mult)
-      })
-      .replace(/\*\d+/g, '')
-      .trim()
+    const value = template.replace(/\{param(\d+):([^}]+)\}/g, (_, index, fmt) =>
+      format.statValue(fmt, Number(params[Number(index) - 1]) || 0),
+    )
 
     return { label: label.trim(), value }
   })
@@ -172,12 +210,16 @@ const passiveSkills = computed(() =>
     <section v-for="skill in combatSkills" :key="skill.id" class="panel">
       <div class="panel-head">
         <img
-          v-if="skillIconUrl(skill)"
+          v-if="skillIcon(skill).status === 'ok'"
           class="skill-icon"
-          :src="skillIconUrl(skill)"
+          :src="skillIcon(skill).url"
           :alt="skill.name + ' 图标'"
+          loading="lazy"
+          @error="onSkillIconError(skill)"
         />
-        <div v-else class="skill-icon icon-placeholder">图标</div>
+        <div v-else class="skill-icon icon-placeholder">
+          {{ skillIcon(skill).status === 'missing' ? '图标' : '' }}
+        </div>
         <div class="panel-head-text">
           <h2 class="panel-title">{{ skill.name }}</h2>
         </div>
