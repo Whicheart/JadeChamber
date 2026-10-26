@@ -13,9 +13,14 @@
     side[<数字>]     -> UI_AvatarIcon_<文件夹名>_Side[_<数字>]
     cons-<数字>      -> UI_AvatarIcon_<文件夹名>_Constellation_<数字>
     passive-<数字>   -> UI_AvatarIcon_<文件夹名>_Passive_<数字+1>
+    talent-[aeq]     -> UI_AvatarIcon_<文件夹名>_Talent_[NormalAttack/ElementSkill/ElementBurst]
+                        (a -> NormalAttack, e -> ElementSkill, q -> ElementBurst)
 
 不在对照表里的文件 (banner / card / face-q / 已重命名过的文件等) 一律不动。
 重复执行是安全的: 已改过名的文件不会再匹配到上述格式。
+
+特例: talent-a/e/q 若目标文件已存在, 直接删除原文件 (保留已重命名的那份);
+其他映射遇到同名目标仍然跳过并告警, 不会覆盖。
 """
 
 import os
@@ -36,6 +41,7 @@ stats = {
     "dirs": 0,
     "renamed": 0,
     "untouched": 0,
+    "removed_duplicate": 0,
     "conflicts": [],
     "errors": [],
 }
@@ -76,6 +82,11 @@ def build_new_stem(stem, folder):
     if m:
         return prefix + "Passive_%d" % (int(m.group(1)) + 1)
 
+    m = re.fullmatch(r"talent-([aeq])", stem)
+    if m:
+        suffix = {"a": "NormalAttack", "e": "ElementSkill", "q": "ElementBurst"}[m.group(1)]
+        return prefix + "Talent_" + suffix
+
     return None
 
 
@@ -110,6 +121,19 @@ def rename_in(folder):
             stats["untouched"] += 1
             continue
         if os.path.exists(dst):
+            # talent-a/e/q: 目标文件已存在时, 直接删除原文件
+            if re.fullmatch(r"talent-[aeq]", stem):
+                log("目标已存在, 删除原文件: %s/%s (保留 %s)" % (folder, fn, new_name))
+                try:
+                    if not DRY_RUN:
+                        os.remove(path)
+                except OSError as exc:
+                    stats["errors"].append((folder, fn, str(exc)))
+                    log("失败: %s/%s: %s" % (folder, fn, exc))
+                    continue
+                stats["removed_duplicate"] += 1
+                continue
+
             stats["conflicts"].append((folder, fn, new_name))
             log("冲突(目标已存在, 跳过): %s/%s -> %s" % (folder, fn, new_name))
             continue
@@ -135,6 +159,7 @@ def main():
     print("扫描角色文件夹: %d" % stats["dirs"])
     print("重命名图像: %d" % stats["renamed"])
     print("未匹配对照表(保持原样): %d" % stats["untouched"])
+    print("删除重复原文件(talent-*): %d" % stats["removed_duplicate"])
     if stats["conflicts"]:
         print("同名冲突跳过: %d" % len(stats["conflicts"]))
     if stats["errors"]:
