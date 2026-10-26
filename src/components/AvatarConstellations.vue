@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
+import * as getImgUrl from '@/utils/getImgUrl'
 
 const props = defineProps({
   constellations: {
@@ -11,6 +12,24 @@ const props = defineProps({
 
 const data = computed(() => props.constellations || {})
 const list = computed(() => data.value.constellations || [])
+
+// ========== 命座图标 ==========
+// 接口直接给出资源文件名（如 UI_AvatarIcon_Ayaka_Constellation_1），
+// 目录规则与角色头像一致，复用 avatarIcon() 即可拼出路径
+const brokenIcons = reactive(new Set())
+
+const rows = computed(() =>
+  list.value.map((item) => {
+    const iconName = item?.constellationIconName
+    const missing = !iconName || brokenIcons.has(item.id)
+    return { ...item, iconUrl: missing ? '' : getImgUrl.avatarIcon(iconName) }
+  }),
+)
+
+// 素材缺失时（少量新角色还没出图）退回占位，避免出现破图
+function onIconError(id) {
+  brokenIcons.add(id)
+}
 
 // ========== 文本处理 ==========
 function escapeHtml(text) {
@@ -57,9 +76,17 @@ function descHtml(text) {
 
 <template>
   <div id="avatar-constellations">
-    <section v-for="item in list" :key="item.id" class="panel">
+    <section v-for="item in rows" :key="item.id" class="panel">
       <div class="card-head">
-        <div class="icon">图标</div>
+        <img
+          v-if="item.iconUrl"
+          class="icon"
+          :src="item.iconUrl"
+          :alt="item.name + ' 命座图标'"
+          loading="lazy"
+          @error="onIconError(item.id)"
+        />
+        <div v-else class="icon icon-placeholder">图标</div>
         <h2 class="panel-title">{{ item.name }}</h2>
       </div>
 
@@ -94,11 +121,16 @@ function descHtml(text) {
   text-align: center;
 }
 
-/* 图标素材未到位，先占位 */
+/* 命座图标：细线稿 + 透明底，按 contain 保持原始比例 */
 .icon {
   width: 72px;
   height: 72px;
   flex: none;
+  object-fit: contain;
+}
+
+/* 少数新角色还没有命座图标素材，退回虚线占位 */
+.icon-placeholder {
   display: flex;
   justify-content: center;
   align-items: center;
