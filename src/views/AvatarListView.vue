@@ -179,7 +179,7 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
       :style="{ backgroundImage: `url(${getImgUrl.avatarIcon(avatar.GachaIconName)})` }"
       @click="$router.push(`/avatar/${avatar.id}`)"
     >
-      {{ avatar.name }}
+      <!-- {{ avatar.name }} -->
     </button>
   </div>
 </template>
