@@ -242,4 +242,36 @@ function descHtml(text) {
   font-style: italic;
   color: var(--clr-white-50);
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  #avatar-outfits {
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  /* 竖屏下 45vh 会把整套立绘压得很小，收到 32vh 更耐看 */
+  .splash {
+    max-height: 32vh;
+  }
+
+  .splash-placeholder {
+    height: 200px;
+    font-size: 15px;
+  }
+
+  .panel-title {
+    font-size: 17px;
+  }
+
+  .desc {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+}
 </style>

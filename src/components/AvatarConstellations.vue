@@ -169,4 +169,32 @@ function descHtml(text) {
   font-style: italic;
   color: var(--clr-white-50);
 }
+
+/* ========== 窄屏（移动设备）适配：两列在手机上会挤成竖排文字，改成单列 ========== */
+@media (max-width: 768px) {
+  #avatar-constellations {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 10px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 18px;
+  }
+
+  .desc {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .icon {
+    width: 56px;
+    height: 56px;
+  }
+}
 </style>

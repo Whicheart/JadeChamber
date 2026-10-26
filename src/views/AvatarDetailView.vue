@@ -232,4 +232,56 @@ watch(
   background-color: var(--clr-white-20);
   color: var(--clr-white);
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  #avatar-detail {
+    width: calc(100% - 24px);
+    height: calc(100% - 8px);
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .nav-bar {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  /* 六个页签在手机上必须挤在一行，缩字号、去掉字距 */
+  .nav-btn {
+    height: 40px;
+    padding: 0 2px;
+    border-radius: 10px;
+    font-size: 13px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .content-area {
+    padding-bottom: 60px;
+  }
+
+  .status-panel {
+    min-height: 200px;
+  }
+
+  .status-text {
+    font-size: 15px;
+  }
+}
+
+/* 手机竖屏放不下六个四字页签，改成两行三列，字号不必再压 */
+@media (max-width: 480px) {
+  .nav-bar {
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    flex: 1 0 calc(33.333% - 4px);
+    height: 38px;
+    padding: 0;
+    font-size: 14px;
+  }
+}
 </style>

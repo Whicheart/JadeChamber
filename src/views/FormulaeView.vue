@@ -231,4 +231,48 @@ onUpdated(renderMath)
 .end {
   height: 50vh;
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  /* 原样式用 absolute 铺满视口，窄屏改成和列表页一致的流式列 */
+  #body {
+    position: static;
+    width: calc(100% - 24px);
+    height: calc(100% - 8px);
+    margin-top: 8px;
+    padding: 0 0 60px;
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 10px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .panel-body {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  /* 行间公式普遍长于手机宽度，允许单独横向滚动，不撑破面板 */
+  .panel-body :deep(.katex-display) {
+    margin: 10px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .panel-body :deep(.katex) {
+    font-size: 0.95em;
+  }
+
+  .end {
+    height: 20vh;
+  }
+}
 </style>

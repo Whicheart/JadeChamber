@@ -381,4 +381,78 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   background-color: var(--clr-white-20);
   color: var(--clr-white);
 }
+
+/* ========== 窄屏（移动设备）适配：60vw 的固定栏宽在手机上只剩两百多像素 ========== */
+@media (max-width: 768px) {
+  #avatar-list-view {
+    width: calc(100% - 24px);
+    height: calc(100% - 8px);
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .filter-bar {
+    gap: 4px;
+    padding: 5px;
+    border-radius: 14px;
+  }
+
+  .filter-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-size: 60%;
+  }
+
+  .filter-input {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 15px;
+  }
+
+  .filter-panel {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .filter-title {
+    margin-bottom: 8px;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  .filter-buttons {
+    gap: 8px;
+  }
+
+  .filter-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .list-area {
+    padding-bottom: 60px;
+  }
+
+  /* 一行三张卡片左右，卡片高度等比压到 260px */
+  .avatar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 10px;
+  }
+
+  .avatar-card {
+    height: 260px;
+    border-radius: 12px;
+  }
+
+  .status-panel {
+    min-height: 200px;
+  }
+
+  .status-text {
+    font-size: 15px;
+  }
+}
 </style>

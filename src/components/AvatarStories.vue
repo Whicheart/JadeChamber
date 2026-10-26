@@ -124,4 +124,32 @@ function descHtml(text) {
   font-style: italic;
   color: var(--clr-white-50);
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  #avatar-stories {
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 17px;
+  }
+
+  /* 标题与提示语在窄屏下改为上下排布 */
+  .card-head {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .desc {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+}
 </style>

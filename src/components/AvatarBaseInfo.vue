@@ -661,4 +661,116 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   color: var(--clr-white-40);
   padding: 8px 14px;
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  #avatar-base-info {
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  /* A 块：立绘与角色资料从左右并排改为上下排布 */
+  .panel-a {
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .splash-box {
+    width: 100%;
+    height: 300px;
+  }
+
+  .name-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .name-row h1 {
+    font-size: 28px;
+  }
+
+  .star {
+    font-size: 16px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .desc {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .panel-title {
+    margin-bottom: 12px;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .level-drag {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .level-badge {
+    min-width: 64px;
+    padding: 4px 10px;
+    font-size: 16px;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  /* C 块：滑块与材料清单从左右并排改为上下排布 */
+  .material-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .slider-group {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .slider-label {
+    width: 64px;
+    font-size: 14px;
+  }
+
+  .slider-num {
+    width: 54px;
+    font-size: 14px;
+  }
+
+  /* 材料名 + 数量在手机上两列太挤，改成单列 */
+  .material-rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .material-row {
+    padding: 7px 12px;
+    font-size: 14px;
+  }
+
+  .material-total {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+}
 </style>

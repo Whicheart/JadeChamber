@@ -460,4 +460,77 @@ const passiveSkills = computed(() =>
   line-height: 1.9;
   color: var(--clr-white-70);
 }
+
+/* ========== 窄屏（移动设备）适配 ========== */
+@media (max-width: 768px) {
+  #avatar-skills {
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .panel-head {
+    gap: 12px;
+  }
+
+  .skill-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .skill-desc,
+  .passive-desc {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .level-drag {
+    gap: 10px;
+  }
+
+  .level-badge {
+    min-width: 64px;
+    padding: 4px 10px;
+    font-size: 16px;
+  }
+
+  .attr-list li {
+    gap: 12px;
+    padding: 7px 12px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  /* 参数模板可能很长（如「(121.0%攻击力+241.9%元素精通)*2」），允许折行而不是溢出 */
+  .value {
+    min-width: 0;
+    font-size: 14px;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .passive-list {
+    gap: 12px;
+  }
+
+  .passive-item {
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .passive-name {
+    font-size: 17px;
+  }
+}
 </style>

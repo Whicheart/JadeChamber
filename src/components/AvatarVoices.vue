@@ -145,4 +145,40 @@ function textHtml(text) {
   font-style: italic;
   color: var(--clr-white-50);
 }
+
+/* ========== 窄屏（移动设备）适配：台词两列在手机上会频繁折行，改成单列 ========== */
+@media (max-width: 768px) {
+  #avatar-voices {
+    gap: 12px;
+  }
+
+  .panel {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .panel-title {
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .voice-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .voice-item {
+    padding: 12px;
+  }
+
+  .voice-title {
+    font-size: 14px;
+  }
+
+  .voice-text {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+}
 </style>
