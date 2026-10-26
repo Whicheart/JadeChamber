@@ -153,6 +153,7 @@ watch(
   justify-content: center;
   align-items: center;
   background-color: var(--clr-black-90);
+  border: 1px solid var(--clr-white-10);
   border-radius: 9999px;
 }
 
