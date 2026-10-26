@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import * as getImgUrl from '@/utils/getImgUrl'
+import { hasImage } from '@/utils/hasImage'
 
 const props = defineProps({
   outfits: {
@@ -57,21 +58,12 @@ function artOf(item) {
   return artState[item.id] || { status: 'loading', url: '' }
 }
 
-// 缺图时 vite 会拿 SPA 回退页冒充资源（200 + text/html），所以只认真图片响应，
+// 缺图时 vite 会拿 SPA 回退页冒充资源（200 + text/html），hasImage 只认真正的图片响应，
 // 否则 <img> 会把整页 HTML 当图解码失败，露出一张破图 + alt 文本
-async function isImage(url) {
-  try {
-    const res = await fetch(url, { method: 'HEAD' })
-    return res.ok && String(res.headers.get('content-type') || '').startsWith('image/')
-  } catch {
-    return false
-  }
-}
-
 // 按候选顺序逐张探测，第一张真实存在的图片胜出；全都没有就落到占位框
 async function resolveArt(item) {
   for (const url of splashCandidates(item)) {
-    if (await isImage(url)) {
+    if (await hasImage(url)) {
       artState[item.id] = { status: 'ok', url }
       return
     }
