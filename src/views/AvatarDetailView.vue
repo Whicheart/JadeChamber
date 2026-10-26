@@ -1,12 +1,8 @@
 <script setup>
-// ==========================================
-// 1. 依赖引入
-// ==========================================
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 
-// 导入各个子模块组件
 import AvatarBaseInfo from '@/components/AvatarBaseInfo.vue'
 import AvatarSkills from '@/components/AvatarSkills.vue'
 import AvatarConstellations from '@/components/AvatarConstellations.vue'
@@ -14,12 +10,9 @@ import AvatarOutfits from '@/components/AvatarOutfits.vue'
 import AvatarStories from '@/components/AvatarStories.vue'
 import AvatarVoices from '@/components/AvatarVoices.vue'
 
-// ==========================================
-// 2. 路由与静态配置
-// ==========================================
 const route = useRoute()
 
-// 接口模块映射表
+// 接口模块映射表：键名与 avatarData 的字段一一对应
 const apiMap = {
   baseInfo: 'base-info',
   skills: 'skills',
@@ -29,10 +22,16 @@ const apiMap = {
   voices: 'voices',
 }
 
-// ==========================================
-// 3. 响应式数据状态
-// ==========================================
-// 集中管理当前页面的所有角色数据
+// 顶部 Tab
+const navBtns = [
+  { id: 1, text: '基础信息' },
+  { id: 2, text: '天赋技能' },
+  { id: 3, text: '命座详情' },
+  { id: 4, text: '角色时装' },
+  { id: 5, text: '角色故事' },
+  { id: 6, text: '角色语音' },
+]
+
 const avatarData = ref({
   baseInfo: {},
   skills: {},
@@ -42,158 +41,195 @@ const avatarData = ref({
   voices: {},
 })
 
-// 导航栏配置
-const navBtns = ref([
-  { id: 1, text: '基础信息' },
-  { id: 2, text: '天赋技能' },
-  { id: 3, text: '命座详情' },
-  { id: 4, text: '角色时装' },
-  { id: 5, text: '角色故事' },
-  { id: 6, text: '角色语音' },
-])
-
-// 当前选中的导航 Tab
 const activeNavBtnId = ref(1)
+const loading = ref(true)
+const failed = ref(false)
 
-// ==========================================
-// 4. 侦听器与业务逻辑
-// ==========================================
-// 监听路由参数变化，并发拉取所有模块数据
+// 六个模块并发拉取，任一失败整页进入失败态（重试按钮会重新调用本函数）
+async function loadAvatar(avatarId) {
+  if (!avatarId) return
+
+  loading.value = true
+  failed.value = false
+
+  try {
+    const keys = Object.keys(apiMap)
+    const results = await Promise.all(
+      keys.map((key) => request.get(`/api/avatar/${avatarId}/${apiMap[key]}`)),
+    )
+
+    keys.forEach((key, index) => {
+      avatarData.value[key] = results[index]
+    })
+  } catch (error) {
+    console.error('获取角色数据失败：', error)
+    failed.value = true
+  } finally {
+    loading.value = false
+  }
+}
+
+// 换角色时回到第一个 Tab，避免停在上一个角色看过的页签
 watch(
   () => route.params.avatarId,
-  async (avatarId) => {
-    console.log('路由参数变化：', route.params.avatarId)
-    if (!avatarId) return
-
-    try {
-      const keys = Object.keys(apiMap)
-
-      const results = await Promise.all(
-        keys.map((key) => request.get(`/api/avatar/${avatarId}/${apiMap[key]}`)),
-      )
-
-      keys.forEach((key, index) => {
-        avatarData.value[key] = results[index]
-      })
-
-      console.log('全部数据加载完毕！', avatarData.value)
-    } catch (error) {
-      console.error('获取角色数据失败：', error)
-    }
+  (avatarId) => {
+    activeNavBtnId.value = 1
+    loadAvatar(avatarId)
   },
   { immediate: true },
 )
 </script>
 
 <template>
-  <!-- 顶部导航栏 -->
-  <div id="navbar">
-    <button
-      v-for="btn in navBtns"
-      :key="btn.id"
-      class="nav-btn"
-      :class="{ active: activeNavBtnId === btn.id }"
-      @click="activeNavBtnId = btn.id"
-    >
-      {{ btn.text }}
-    </button>
-  </div>
+  <div id="avatar-detail">
+    <nav class="nav-bar">
+      <button
+        v-for="btn in navBtns"
+        :key="btn.id"
+        type="button"
+        class="nav-btn"
+        :class="{ active: activeNavBtnId === btn.id }"
+        @click="activeNavBtnId = btn.id"
+      >
+        {{ btn.text }}
+      </button>
+    </nav>
 
-  <!-- 主内容区 -->
-  <div id="content-area">
-    <!-- 数据加载完毕才渲染子组件，防止空指针报错 -->
-    <template v-if="avatarData.baseInfo.name">
-      <AvatarBaseInfo v-if="activeNavBtnId === 1" :base-info="avatarData.baseInfo" />
-      <AvatarSkills
-        v-if="activeNavBtnId === 2"
-        :skills="avatarData.skills"
-        :weapon-type="avatarData.baseInfo.weaponType"
-      />
-      <AvatarConstellations v-if="activeNavBtnId === 3" :constellations="avatarData.constellations" />
-      <AvatarOutfits
-        v-if="activeNavBtnId === 4"
-        :outfits="avatarData.outfits"
-        :splash-icon-name="avatarData.baseInfo.splashIconName"
-      />
-      <AvatarStories v-if="activeNavBtnId === 5" :stories="avatarData.stories" />
-      <AvatarVoices v-if="activeNavBtnId === 6" :voices="avatarData.voices" />
-    </template>
-    <div v-else class="loading">
-      正在加载角色数据...
+    <div class="content-area">
+      <section v-if="failed" class="status-panel">
+        <p class="status-text">角色数据加载失败</p>
+        <button type="button" class="retry-btn" @click="loadAvatar(route.params.avatarId)">
+          重新加载
+        </button>
+      </section>
+
+      <section v-else-if="loading || !avatarData.baseInfo.name" class="status-panel">
+        <p class="status-text">正在加载角色数据...</p>
+      </section>
+
+      <!-- 数据加载完毕才渲染子组件，防止空指针报错 -->
+      <template v-else>
+        <AvatarBaseInfo v-if="activeNavBtnId === 1" :base-info="avatarData.baseInfo" />
+        <AvatarSkills
+          v-if="activeNavBtnId === 2"
+          :skills="avatarData.skills"
+          :weapon-type="avatarData.baseInfo.weaponType"
+        />
+        <AvatarConstellations
+          v-if="activeNavBtnId === 3"
+          :constellations="avatarData.constellations"
+        />
+        <AvatarOutfits
+          v-if="activeNavBtnId === 4"
+          :outfits="avatarData.outfits"
+          :splash-icon-name="avatarData.baseInfo.splashIconName"
+        />
+        <AvatarStories v-if="activeNavBtnId === 5" :stories="avatarData.stories" />
+        <AvatarVoices v-if="activeNavBtnId === 6" :voices="avatarData.voices" />
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 全局变量定义 */
-* {
-  --clr-border: var(--clr-white-30);
-  --clr-background: var(--clr-black-90);
-  --clr-color: var(--clr-white);
-
-  --wid-filter-open-btn: 50px;
-  --wid-filter-input: 50vw;
-  --wid-avatar-card: 160px;
-  --wid-max: calc(var(--wid-filter-open-btn) + var(--wid-filter-input));
-
-  --pos-filter-top: 60px;
-  --pos-filter-list-top: calc(var(--pos-filter-top) + 60px);
-
-  --num-avatar-list-box-gradient-stops: 20px;
+/* 与角色页各面板同一套材质：black-80 底 + white-10 细边 + 16px 圆角 */
+#avatar-detail {
+  display: flex;
+  flex-direction: column;
+  width: 60vw;
+  /* App 的 main 有 50px 上内边距，这里补 10px 与列表页的筛选栏齐平 */
+  height: calc(100% - 10px);
+  min-height: 0;
+  gap: 16px;
+  margin-top: 10px;
+  color: var(--clr-white);
 }
 
-/* 顶部导航栏 */
-#navbar {
-  position: fixed;
-  top: 60px;
-  z-index: 999;
-  width: calc(60vw + 6px);
-  height: 56px;
+/* 顶部 Tab */
+.nav-bar {
+  flex: none;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--clr-black-90);
+  gap: 6px;
+  padding: 6px;
   border: 1px solid var(--clr-white-10);
-  border-radius: 9999px;
+  border-radius: 16px;
+  background-color: var(--clr-black-80);
 }
 
 .nav-btn {
-  width: 10vw;
-  height: 50px;
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
   background-color: var(--clr-transparent);
   color: var(--clr-white-50);
-  border: none;
-  border-radius: 9999px;
-  font-size: 20px;
-  letter-spacing: 0.5em;
+  font-family: inherit;
+  font-size: 17px;
+  letter-spacing: 2px;
   cursor: pointer;
-  transition: 150ms;
+  transition:
+    background-color 150ms,
+    color 150ms;
 }
 
 .nav-btn:hover {
   background-color: var(--clr-white-10);
-  transition: 150ms;
+  color: var(--clr-white-80);
 }
 
 .nav-btn.active {
-  color: var(--clr-color);
   background-color: var(--clr-white-20);
-  transition: 150ms;
+  color: var(--clr-white);
 }
 
-/* 主内容滚动区 */
-#content-area {
-  position: absolute;
-  top: 0;
-  width: 60vw;
-  height: 100vh; 
-  padding-top: 140px;
-  padding-bottom: 100px;
-  overflow-y: auto; 
-  scrollbar-width: none; /* 隐藏 Firefox 滚动条 */
+/* 内容区：面板自带内边距，这里只负责滚动与底部留白 */
+.content-area {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
-#content-area::-webkit-scrollbar {
-  display: none; /* 隐藏 Webkit 滚动条 */
+.content-area::-webkit-scrollbar {
+  display: none;
+}
+
+/* 加载中 / 加载失败 */
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 280px;
+  border: 1px dashed var(--clr-white-20);
+  border-radius: 16px;
+  background-color: var(--clr-white-10);
+}
+
+.status-text {
+  color: var(--clr-white-50);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.retry-btn {
+  padding: 8px 22px;
+  border: 1px solid var(--clr-white-20);
+  border-radius: 9999px;
+  background-color: var(--clr-white-10);
+  color: var(--clr-white-70);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.retry-btn:hover {
+  background-color: var(--clr-white-20);
+  color: var(--clr-white);
 }
 </style>
