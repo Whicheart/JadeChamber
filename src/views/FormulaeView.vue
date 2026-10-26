@@ -1,24 +1,48 @@
 <script setup>
-import { onMounted } from 'vue'
-import renderMathInElement from 'katex/dist/contrib/auto-render'
+import { nextTick, onActivated, onMounted, onUpdated, ref } from 'vue'
+import katexAutoRender from 'katex/dist/contrib/auto-render'
 import 'katex/dist/katex.min.css'
 
-onMounted(() => {
-  renderMathInElement(document.body, {
-    delimiters: [
-      { left: '$$', right: '$$', display: true },
-      { left: '$', right: '$', display: false },
-    ],
-    throwOnError: false,
-  })
-})
+// 兼容不同打包器对默认导出的处理
+const renderMathInElement = katexAutoRender?.default ?? katexAutoRender
+
+const rootEl = ref(null)
+
+// 模板里还没被替换掉的 $$ 说明公式尚未渲染
+function hasRawMath() {
+  return !!rootEl.value && rootEl.value.textContent.includes('$$')
+}
+
+// 把模板里的 $$…$$ 渲染成公式；重复调用是安全的
+async function renderMath() {
+  await nextTick()
+
+  if (!hasRawMath() || typeof renderMathInElement !== 'function') return
+
+  try {
+    renderMathInElement(rootEl.value, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+      ],
+      throwOnError: false,
+    })
+  } catch (error) {
+    console.error('公式渲染失败：', error)
+  }
+}
+
+onMounted(renderMath)
+onActivated(renderMath)
+// 热更新或重新渲染会把公式还原成源码文本，这里补渲染
+onUpdated(renderMath)
 </script>
 
 <template>
-  <div id="body">
-    <div class="abc">
-      <div class="title">防御力 抗性</div>
-      <div class="contant">
+  <div id="body" ref="rootEl">
+    <div class="panel">
+      <div class="panel-title">防御力 抗性</div>
+      <div class="panel-body">
         <p>抗性通用公式：</p>
         $$抗性系数 = \begin{cases} 1 - \frac{抗性}{2} & \text{抗性} \leq 0 \\ 1 - 抗性 & 0 \leq
         \text{抗性} \leq 75\% \\ \frac{1}{4 \times 抗性 + 1} & 75\% \leq \text{抗性} \end{cases}$$
@@ -30,9 +54,9 @@ onMounted(() => {
         $$防御系数 = \frac{5 \times 敌人等级 + 500}{5 \times 敌人等级 + 500 + 角色防御}$$
       </div>
     </div>
-    <div class="abc">
-      <div class="title">常规伤害</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">常规伤害</div>
+      <div class="panel-body">
         <p>角色造成的常规伤害：</p>
         $$最终伤害 = (基础值 + 激化值 + 基础值加成) \times (1 + 增伤\% + 易伤\% - 减伤\%) \times
         抗性系数 \times 防御系数 \times 暴击区 \times 蒸发融化系数$$
@@ -46,9 +70,9 @@ onMounted(() => {
         <p>蒸发融化系数：见【增幅反应】章节</p>
       </div>
     </div>
-    <div class="abc">
-      <div class="title">月反应</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">月反应</div>
+      <div class="panel-body">
         <p>月反应伤害无视敌方防御力</p>
         <p>月反应直伤伤害计算公式：</p>
         $$直伤基础 = 直伤基础倍率 \times 基础值 \times (1 + 基础提升\%) \times (1 + \frac{6 \times
@@ -79,9 +103,9 @@ onMounted(() => {
         </p>
       </div>
     </div>
-    <div class="abc">
-      <div class="title">激化反应</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">激化反应</div>
+      <div class="panel-body">
         <p>当雷元素触及草元素时，会按照$1 : 1 : 1$的比例互相消耗并生成原激化元素</p>
         <p>原激化元素可以发生绽放和燃烧反应，在这些反应中的表现和草元素相同</p>
         <p>原激化元素的持续时间：$(6 + 5 \times 元素量)$秒</p>
@@ -96,9 +120,9 @@ onMounted(() => {
         <p>当敌人触发上述反应时，原本的 1446.85 的数值有变化：见【剧变反应】章节</p>
       </div>
     </div>
-    <div class="abc">
-      <div class="title">剧变反应</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">剧变反应</div>
+      <div class="panel-body">
         <p>剧变反应包括：超载、超导、感电、燃烧、碎冰、扩散、绽放、超绽放、烈绽放</p>
         <p>剧变反应造成的伤害不受益于常规增伤/易伤/减伤，且无视防御力、不能暴击</p>
         $$剧变基础 = 1446.85 \times 反应倍率 \times (1 + \frac{16 \times 元素精通}{元素精通 + 2000}
@@ -124,9 +148,9 @@ onMounted(() => {
         <p>- 110级：1963.85</p>
       </div>
     </div>
-    <div class="abc">
-      <div class="title">增幅反应</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">增幅反应</div>
+      <div class="panel-body">
         <p>增幅反应包括：蒸发、融化</p>
         <p>触发增幅反应时，会为本次伤害附加蒸发融化系数（完整公式见【常规伤害】章节）</p>
         <p>若攻击没有出现伤害数字（例如命中护盾），则本次伤害不会计算蒸发融化系数</p>
@@ -139,9 +163,9 @@ onMounted(() => {
         <p>- $冰 \to \text{火 融化 1.5}$</p>
       </div>
     </div>
-    <div class="abc">
-      <div class="title">结晶反应</div>
-      <div class="contant">
+    <div class="panel">
+      <div class="panel-title">结晶反应</div>
+      <div class="panel-body">
         <p>触发结晶反应时，会掉落对应火/水/雷/冰元素的晶片，拾取后可获得护盾</p>
         <p>结晶护盾对其自身属性的伤害有 250% 的吸收效率</p>
         $$结晶盾量 = 1851.06 \times (1 + \frac{4.44 \times 元素精通}{元素精通 + 1400})$$
@@ -155,47 +179,56 @@ onMounted(() => {
 </template>
 
 <style scoped>
-* {
-  font-family: '微软雅黑';
-}
 #body {
-  width: 100vw;
-  height: auto;
-  min-width: 800px;
-  min-height: 650px;
-  margin-top: 70px;
-  background-color: transparent;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  color: white;
-}
-.abc {
+  position: absolute;
+  top: 0;
   width: 80%;
-  height: auto;
-  border: solid 1px rgba(255, 255, 255, 0.5);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  max-width: 1200px;
+  height: 100vh;
+  padding: 90px 0 120px;
+  box-sizing: border-box;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 24px;
+  color: var(--clr-white);
+  scrollbar-width: none;
+}
+#body::-webkit-scrollbar {
+  display: none;
+}
+.panel {
+  border: 1px solid var(--clr-white-10);
+  border-radius: 16px;
+  background-color: var(--clr-black-80);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   box-sizing: border-box;
-  padding: 30px 50px 30px 50px;
-  margin-top: 30px;
 }
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  width: 100%;
-  text-align: center;
+.panel-title {
+  font-size: 22px;
+  font-weight: normal;
+  letter-spacing: 2px;
 }
-.contant {
-  font-size: 20px;
+.panel-body {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--clr-white-70);
+}
+.panel-body p {
+  margin: 0;
+}
+.panel-body p + p {
+  margin-top: 6px;
+}
+/* 公式块上下留白，避免与正文挤在一起 */
+.panel-body :deep(.katex-display) {
+  margin: 12px 0;
+  color: var(--clr-white);
 }
 .end {
-  width: 100%;
   height: 50vh;
 }
 </style>

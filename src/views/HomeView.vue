@@ -18,10 +18,10 @@ const navList = [
   },
   {
     id: 2,
-    title: '计算器',
+    title: '实用功能',
     buttons: [
       { id: 21, content: '圣遗物', path: '/' },
-      { id: 22, content: '秒均伤害', path: '/' },
+      { id: 22, content: '公式大全', path: '/formulae' },
     ],
   },
 ]
