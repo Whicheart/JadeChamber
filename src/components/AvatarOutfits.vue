@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
+import * as getImgUrl from '@/utils/getImgUrl'
 
 const props = defineProps({
   outfits: {
@@ -7,10 +8,48 @@ const props = defineProps({
     required: true,
     default: () => ({}),
   },
+  // 角色立绘文件名（base-info.splashIconName），用来定位 assets/img/avatar/<角色>/ 目录
+  splashIconName: {
+    type: String,
+    default: '',
+  },
 })
 
 const data = computed(() => props.outfits || {})
 const list = computed(() => data.value.outfits || [])
+
+// ========== 装扮立绘 ==========
+// 接口不给图片名，只能按目录约定拼：默认装扮 Splash，第 N 套装扮 Splash_N
+const dirName = computed(
+  () =>
+    String(props.splashIconName || '')
+      .replace('UI_AvatarIcon_', '')
+      .split('_')[0],
+)
+
+// 少数角色把第二套装扮存成了 Splash_0，因此按候选顺序逐张回退
+function splashCandidates(item) {
+  const dir = dirName.value
+  if (!dir) return []
+
+  const base = `UI_AvatarIcon_${dir}_Splash`
+  const order = item?.indexID == null ? 1 : Number(item.indexID) + 1
+  const names = order > 1 ? [`${base}_${order}`, `${base}_0`] : [base]
+
+  return names.map((name) => getImgUrl.avatarIcon(name))
+}
+
+// 每套装扮记一个失败次数，第 1 张加载不出来就换第 2 张，都失败则退回占位
+const failedCount = reactive({})
+
+function splashUrl(item) {
+  const candidates = splashCandidates(item)
+  return candidates[failedCount[item.id] ?? 0] || ''
+}
+
+function onSplashError(item) {
+  failedCount[item.id] = (failedCount[item.id] ?? 0) + 1
+}
 
 // 品质：4 → 四星，5 → 五星，缺省不显示
 const QUALITY_MAP = { 4: '四星', 5: '五星' }
@@ -56,7 +95,15 @@ function descHtml(text) {
 <template>
   <div id="avatar-outfits">
     <section v-for="item in list" :key="item.id" class="panel">
-      <div class="splash">立绘</div>
+      <img
+        v-if="splashUrl(item)"
+        class="splash"
+        :src="splashUrl(item)"
+        :alt="item.name + ' 装扮立绘'"
+        loading="lazy"
+        @error="onSplashError(item)"
+      />
+      <div v-else class="splash splash-placeholder">该时装无立绘</div>
 
       <div class="card-head">
         <h2 class="panel-title">{{ item.name }}</h2>
@@ -90,20 +137,28 @@ function descHtml(text) {
 
 .card-head {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
 }
 
-/* 立绘素材未到位，先占位 */
+/* 装扮立绘：透明底横版全幅，按 contain 显示、不裁切 */
 .splash {
+  display: block;
   width: 100%;
+  max-height: 45vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+/* 少数装扮还没有专属立绘（如琴的第三套），先占位 */
+.splash-placeholder {
   height: 260px;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 1px dashed var(--clr-white-20);
-  border-radius: 12px;
   background-color: var(--clr-white-10);
   color: var(--clr-white-50);
   font-size: 13px;
@@ -116,8 +171,11 @@ function descHtml(text) {
   text-align: center;
 }
 
+/* 星级：位于名称下方并居中，显式写 align-self，不依赖父级 align-items */
 .quality {
-  align-self: flex-start;
+  align-self: center;
+  width: fit-content;
+  margin-inline: auto;
   padding: 2px 10px;
   border-radius: 9999px;
   background-color: var(--clr-white-20);

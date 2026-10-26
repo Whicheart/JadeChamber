@@ -104,9 +104,17 @@ watch(
     <!-- 数据加载完毕才渲染子组件，防止空指针报错 -->
     <template v-if="avatarData.baseInfo.name">
       <AvatarBaseInfo v-if="activeNavBtnId === 1" :base-info="avatarData.baseInfo" />
-      <AvatarSkills v-if="activeNavBtnId === 2" :skills="avatarData.skills" />
+      <AvatarSkills
+        v-if="activeNavBtnId === 2"
+        :skills="avatarData.skills"
+        :weapon-type="avatarData.baseInfo.weaponType"
+      />
       <AvatarConstellations v-if="activeNavBtnId === 3" :constellations="avatarData.constellations" />
-      <AvatarOutfits v-if="activeNavBtnId === 4" :outfits="avatarData.outfits" />
+      <AvatarOutfits
+        v-if="activeNavBtnId === 4"
+        :outfits="avatarData.outfits"
+        :splash-icon-name="avatarData.baseInfo.splashIconName"
+      />
       <AvatarStories v-if="activeNavBtnId === 5" :stories="avatarData.stories" />
       <AvatarVoices v-if="activeNavBtnId === 6" :voices="avatarData.voices" />
     </template>

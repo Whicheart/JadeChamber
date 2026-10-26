@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive } from 'vue'
 import * as format from '@/utils/format'
+import * as getImgUrl from '@/utils/getImgUrl'
 
 const props = defineProps({
   skills: {
@@ -8,12 +9,17 @@ const props = defineProps({
     required: true,
     default: () => ({}),
   },
+  // 角色武器类型（如「单手剑」），来自 base-info，用于普通攻击图标
+  weaponType: {
+    type: String,
+    default: '',
+  },
 })
 
 const data = computed(() => props.skills || {})
 
 // ========== 技能分类 ==========
-// icon 前缀决定归属：Skill_A 普攻、Skill_S 战技、Skill_E 爆发
+// skillIconName 前缀决定归属：Skill_A 普攻、Skill_S 战技、Skill_E 爆发
 const SKILL_TYPES = [
   { prefix: 'Skill_A', label: '普通攻击' },
   { prefix: 'Skill_S', label: '元素战技' },
@@ -21,7 +27,7 @@ const SKILL_TYPES = [
 ]
 
 function typeOrder(skill) {
-  const icon = String(skill?.icon || '')
+  const icon = String(skill?.skillIconName || skill?.icon || '')
   const index = SKILL_TYPES.findIndex((item) => icon.startsWith(item.prefix))
   return index < 0 ? SKILL_TYPES.length : index
 }
@@ -30,6 +36,26 @@ function typeOrder(skill) {
 const combatSkills = computed(() =>
   [...(data.value.combatSkills || [])].sort((a, b) => typeOrder(a) - typeOrder(b)),
 )
+
+// ========== 技能图标 ==========
+// 普通攻击没有专属图标素材，改用角色武器类型的过滤器图标
+const WEAPON_FILTER_ICON = {
+  单手剑: 'Weapon_Sword',
+  双手剑: 'Weapon_Claymore',
+  长柄武器: 'Weapon_Polearm',
+  法器: 'Weapon_Catalyst',
+  弓: 'Weapon_Bow',
+}
+
+const normalAttackIconUrl = computed(() => {
+  const iconName = WEAPON_FILTER_ICON[props.weaponType]
+  return iconName ? getImgUrl.filter(iconName) : ''
+})
+
+// 只有普通攻击（Skill_A）用武器图标，战技/爆发暂无素材，继续占位
+function skillIconUrl(skill) {
+  return typeOrder(skill) === 0 ? normalAttackIconUrl.value : ''
+}
 
 // ========== 技能等级 ==========
 // 每个技能单独记一个等级，默认 10
@@ -124,10 +150,20 @@ function paramRows(skillData) {
 
 // ========== 固有天赋 ==========
 // 普通被动在前，特殊固有天赋（specialProudSkills）追加在后，同块展示
-const passiveSkills = computed(() => [
-  ...(data.value.passiveSkills || []),
-  ...(data.value.specialProudSkills || []),
-])
+// 接口给出资源文件名（如 UI_AvatarIcon_Ayaka_Passive_1），目录规则与角色头像一致
+const brokenIcons = reactive(new Set())
+
+function onIconError(iconName) {
+  brokenIcons.add(iconName)
+}
+
+const passiveSkills = computed(() =>
+  [...(data.value.passiveSkills || []), ...(data.value.specialProudSkills || [])].map((item) => {
+    const iconName = item?.skillIconName
+    const missing = !iconName || brokenIcons.has(iconName)
+    return { ...item, iconUrl: missing ? '' : getImgUrl.avatarIcon(iconName) }
+  }),
+)
 </script>
 
 <template>
@@ -135,7 +171,13 @@ const passiveSkills = computed(() => [
     <!-- ================= 主动技能（每个技能一块） ================= -->
     <section v-for="skill in combatSkills" :key="skill.id" class="panel">
       <div class="panel-head">
-        <div class="skill-icon">图标</div>
+        <img
+          v-if="skillIconUrl(skill)"
+          class="skill-icon"
+          :src="skillIconUrl(skill)"
+          :alt="skill.name + ' 图标'"
+        />
+        <div v-else class="skill-icon icon-placeholder">图标</div>
         <div class="panel-head-text">
           <h2 class="panel-title">{{ skill.name }}</h2>
         </div>
@@ -174,7 +216,15 @@ const passiveSkills = computed(() => [
           :key="`${passive.id}-${index}`"
           class="passive-item"
         >
-          <div class="skill-icon">图标</div>
+          <img
+            v-if="passive.iconUrl"
+            class="skill-icon"
+            :src="passive.iconUrl"
+            :alt="passive.name + ' 天赋图标'"
+            loading="lazy"
+            @error="onIconError(passive.skillIconName)"
+          />
+          <div v-else class="skill-icon icon-placeholder">图标</div>
           <div class="passive-content">
             <div class="passive-name">{{ passive.name }}</div>
             <div class="passive-desc" v-html="descHtml(mainDesc(passive))"></div>
@@ -222,10 +272,16 @@ const passiveSkills = computed(() => [
   gap: 6px;
 }
 
-/* 图标素材未到位，先占位 */
+/* 天赋图标：透明底细线稿，按 contain 保持原始比例 */
 .skill-icon {
   width: 72px;
   height: 72px;
+  flex: none;
+  object-fit: contain;
+}
+
+/* 主动技能图标素材尚未到位，先占位 */
+.icon-placeholder {
   display: flex;
   justify-content: center;
   align-items: center;
