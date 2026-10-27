@@ -1,8 +1,8 @@
 # JadeChamber
 
-原神资料查询站点，基于 Vue 3 + Vite 构建。
+原神资料查询站点，基于 Vue 3 + Vite 构建，上游配套后端为[Irminsul](https://github.com/Whicheart/Irminsul)
 
-当前提供角色图鉴、角色详情与公式大全三块内容；武器、圣遗物、卡池排期页面已下线，视图保留为「待开发」占位。
+当前提供角色图鉴、角色详情与公式大全三块内容。
 
 ## 功能
 
@@ -19,7 +19,7 @@
 
 **公式大全**（`/formulae`）
 
-- 伤害、反应、精通等公式，KaTeX 渲染
+- 伤害、反应、精通等公式
 
 **待开发**
 
@@ -63,7 +63,7 @@ npm run dev     # 启动开发服务器，默认 http://localhost:5173
 | `npm run lint` | ESLint 检查（带缓存） |
 | `npm run lint:fix` | ESLint 自动修复 |
 | `npm run format` | Prettier 格式化 `src/` |
-| `npm run format:check` | 只检查格式，不写入 |
+| `npm run format:check` | 检查格式 |
 
 ## 配置
 
