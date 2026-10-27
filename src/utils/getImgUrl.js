@@ -1,12 +1,12 @@
 export function avatarIcon(fileName) {
   if (!fileName) return ''
-  
+
   // 1. 去掉前缀
   let cleanName = fileName.replace('UI_AvatarIcon_', '')
-  
+
   // 2. 用下划线切割取第 0 项
   let avatarName = cleanName.split('_')[0]
-  
+
   return new URL(`../assets/img/avatar/${avatarName}/${fileName}.webp`, import.meta.url).href
 }
 
