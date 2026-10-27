@@ -14,12 +14,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0', // 允许局域网访问
-    allowedHosts: [
-      // 允许访问的主机列表
-      'teeny-clinographic-shani.ngrok-free.dev',
-      '.ngrok-free.dev',
-    ],
+    host: '0.0.0.0', // 允许同一局域网内的设备访问
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 后端

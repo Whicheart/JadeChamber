@@ -37,5 +37,3 @@ __screenshots__/
 
 # 工具输出与临时分析报告
 *.report.json
-非功能性检查报告.md
-整改方案.md
