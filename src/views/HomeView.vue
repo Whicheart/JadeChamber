@@ -7,6 +7,7 @@ const navList = [
     title: '数据库',
     buttons: [
       { id: 11, content: '角色', path: '/avatars' },
+      { id: 12, content: '武器', path: '/weapons' },
       { id: 14, content: '敌对单位', path: '/' },
       { id: 16, content: '深境螺旋', path: '/' },
       { id: 17, content: '幽境危战', path: '/' },
