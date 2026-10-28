@@ -29,15 +29,15 @@
 
 ## 技术栈
 
-| 类别 | 选型 |
-| --- | --- |
-| 框架 | Vue 3 |
-| 构建 | Vite 7 |
-| 路由 | Vue Router 4 |
-| 请求 | axios |
-| 公式渲染 | KaTeX |
-| 代码规范 | ESLint 9 + Prettier 3 |
-| 组合式工具 | @vueuse/core |
+| 类别       | 选型                  |
+| ---------- | --------------------- |
+| 框架       | Vue 3                 |
+| 构建       | Vite 7                |
+| 路由       | Vue Router 4          |
+| 请求       | axios                 |
+| 公式渲染   | KaTeX                 |
+| 代码规范   | ESLint 9 + Prettier 3 |
+| 组合式工具 | @vueuse/core          |
 
 ## 环境要求
 
@@ -55,24 +55,24 @@ npm run dev     # 启动开发服务器，默认 http://localhost:5173
 
 ## 可用脚本
 
-| 命令 | 说明 |
-| --- | --- |
-| `npm run dev` | 启动开发服务器 |
-| `npm run build` | 生产构建，输出到 `dist/` |
-| `npm run preview` | 本地预览构建产物 |
-| `npm run lint` | ESLint 检查（带缓存） |
-| `npm run lint:fix` | ESLint 自动修复 |
-| `npm run format` | Prettier 格式化 `src/` |
-| `npm run format:check` | 检查格式 |
+| 命令                   | 说明                     |
+| ---------------------- | ------------------------ |
+| `npm run dev`          | 启动开发服务器           |
+| `npm run build`        | 生产构建，输出到 `dist/` |
+| `npm run preview`      | 本地预览构建产物         |
+| `npm run lint`         | ESLint 检查（带缓存）    |
+| `npm run lint:fix`     | ESLint 自动修复          |
+| `npm run format`       | Prettier 格式化 `src/`   |
+| `npm run format:check` | 检查格式                 |
 
 ## 配置
 
 接口地址通过环境变量 `VITE_API_BASE` 注入：
 
-| 文件 | 用途 | 取值 |
-| --- | --- | --- |
-| `.env.development` | 开发环境 | `/api`，走 Vite 代理 |
-| `.env.production` | 生产构建 | 目前为 `http://localhost:8080`，部署前需改为真实接口地址（同域托管时为 `/api`） |
+| 文件               | 用途     | 取值                                                                            |
+| ------------------ | -------- | ------------------------------------------------------------------------------- |
+| `.env.development` | 开发环境 | `/api`，走 Vite 代理                                                            |
+| `.env.production`  | 生产构建 | 目前为 `http://localhost:8080`，部署前需改为真实接口地址（同域托管时为 `/api`） |
 
 需要按机器覆盖时，使用 `.env.development.local` / `.env.production.local`，这类文件已被 `.gitignore` 忽略。
 
