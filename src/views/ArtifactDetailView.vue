@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 import LoadState from '@/components/LoadState.vue'
@@ -38,6 +38,112 @@ const affixRows = computed(() => {
   const descs = artifactSet.value.setAffixDesc || []
 
   return nums.map((num, index) => ({ num: Number(num), desc: descs[index] || '' }))
+})
+
+/* ========== B 块高度 ==========
+ * 桌面端：B 块高度与左侧五个按钮的总高一致，故事在右栏内部滚动；
+ * 单件套没有五个按钮可撑高，改用「单个按钮高度的 3 倍」。
+ * 移动端：B 块不限高，故事默认只露出「部件按钮高度的 2 倍」，其余折叠并给展开按钮。
+ */
+const PIECE_GAP = 10 // 与 .piece-list 的 gap 保持一致
+
+const listRef = ref(null)
+const storyInnerRef = ref(null)
+// 首帧就按当前视口给值，避免先整段展开再折叠的闪动
+const isMobile = ref(window.matchMedia('(max-width: 768px)').matches)
+const expanded = ref(false)
+const listHeight = ref(0)
+const buttonHeight = ref(0)
+const storyOverflowing = ref(false)
+
+const singlePieceSet = computed(() => pieces.value.length === 1)
+
+const storyHeight = computed(() =>
+  singlePieceSet.value ? buttonHeight.value * 3 : listHeight.value,
+)
+
+const collapsedHeight = computed(() => buttonHeight.value * 2)
+
+const storyStyle = computed(() =>
+  storyHeight.value ? { '--story-height': `${storyHeight.value}px` } : {},
+)
+
+const innerStyle = computed(() =>
+  collapsedHeight.value ? { '--collapse-height': `${collapsedHeight.value}px` } : {},
+)
+
+const showExpandButton = computed(() => isMobile.value && storyOverflowing.value)
+
+let resizeObserver = null
+let mediaQuery = null
+
+// 按按钮自然高度求和，而不是读列表容器的 offsetHeight：
+// 桌面端列表会被右栏拉伸出多余高度，直接读容器会把拉伸值算进去
+function measureList() {
+  const list = listRef.value
+  const buttons = list ? [...list.querySelectorAll('.piece-item')] : []
+
+  buttonHeight.value = buttons[0]?.offsetHeight || 0
+  listHeight.value =
+    buttons.reduce((total, button) => total + button.offsetHeight, 0) +
+    Math.max(buttons.length - 1, 0) * PIECE_GAP
+}
+
+// scrollHeight 是内容总高，折叠状态下读到的同样是全文高度
+function measureStoryOverflow() {
+  const el = storyInnerRef.value
+  storyOverflowing.value =
+    !!el && collapsedHeight.value > 0 && el.scrollHeight > collapsedHeight.value + 1
+}
+
+function measure() {
+  measureList()
+  measureStoryOverflow()
+}
+
+// 视口宽度变化会改变按钮高度（文字换行）与是否移动端，两个都要重测
+function syncViewport() {
+  isMobile.value = mediaQuery?.matches ?? false
+  nextTick(measure)
+}
+
+// 换套装后 DOM 才更新，重新挂监听并测量
+watch(pieces, async () => {
+  expanded.value = false
+
+  await nextTick()
+
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    if (listRef.value) resizeObserver.observe(listRef.value)
+  }
+
+  measure()
+})
+
+// 切换部件时把折叠状态收回，并重测新故事的高度
+watch(selectedId, () => {
+  expanded.value = false
+  nextTick(measure)
+})
+
+onMounted(() => {
+  mediaQuery = window.matchMedia('(max-width: 768px)')
+  isMobile.value = mediaQuery.matches
+  mediaQuery.addEventListener('change', syncViewport)
+
+  resizeObserver = new ResizeObserver(() => measure())
+
+  if (listRef.value) resizeObserver.observe(listRef.value)
+
+  nextTick(measure)
+  // 字体是晚到的 @font-face，加载完成后按钮高度会变一次
+  document.fonts?.ready.then(measure)
+})
+
+onUnmounted(() => {
+  mediaQuery?.removeEventListener('change', syncViewport)
+  resizeObserver?.disconnect()
 })
 
 async function loadArtifact(setId) {
@@ -110,7 +216,7 @@ watch(
 
       <!-- ================= B 块：部件列表（左）+ 部件故事（右） ================= -->
       <section class="panel panel-b">
-        <div class="piece-list">
+        <div ref="listRef" class="piece-list">
           <button
             v-for="piece in pieces"
             :key="piece.id"
@@ -132,20 +238,42 @@ watch(
           <p v-if="!pieces.length" class="empty">该套装没有部件数据</p>
         </div>
 
-        <div class="piece-story">
+        <div class="piece-story" :style="storyStyle">
           <template v-if="selectedPiece">
             <h3 class="piece-story-title">{{ selectedPiece.name }}</h3>
 
-            <div v-if="selectedStory.length" class="story-body">
-              <p
-                v-for="(line, index) in selectedStory"
-                :key="index"
-                :class="{ 'story-blank': !line.trim() }"
+            <div class="piece-story-viewport">
+              <div
+                ref="storyInnerRef"
+                class="piece-story-inner"
+                :class="{
+                  'is-collapsed': isMobile && !expanded,
+                  'is-masked': isMobile && !expanded && storyOverflowing,
+                }"
+                :style="innerStyle"
               >
-                {{ line }}
-              </p>
+                <div v-if="selectedStory.length" class="story-body">
+                  <p
+                    v-for="(line, index) in selectedStory"
+                    :key="index"
+                    :class="{ 'story-blank': !line.trim() }"
+                  >
+                    {{ line }}
+                  </p>
+                </div>
+                <p v-else class="empty">暂无部件故事</p>
+              </div>
             </div>
-            <p v-else class="empty">暂无部件故事</p>
+
+            <button
+              v-if="showExpandButton"
+              type="button"
+              class="expand-btn"
+              :aria-expanded="expanded"
+              @click="expanded = !expanded"
+            >
+              {{ expanded ? '收起' : '展开' }}
+            </button>
           </template>
           <p v-else class="empty">暂无部件故事</p>
         </div>
@@ -267,11 +395,11 @@ watch(
 /* ========== B 块 ========== */
 .panel-b {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 24px;
 }
 
-/* 左栏：五个部件纵向排列，每一项都是按钮 */
+/* 左栏：部件按钮纵向排列，每一项都是按钮 */
 .piece-list {
   flex: none;
   width: 340px;
@@ -342,19 +470,44 @@ watch(
   line-height: 1.7;
 }
 
-/* 右栏：当前部件的故事，左侧列表切换时只换这里的内容 */
+/* 右栏：高度由脚本按左栏按钮总高写入 --story-height，标题固定、内容滚动 */
 .piece-story {
   flex: 1;
   min-width: 0;
-  min-height: 360px;
+  height: var(--story-height, auto);
+  display: flex;
+  flex-direction: column;
 }
 
 .piece-story-title {
+  flex: none;
   margin-bottom: 14px;
   color: var(--clr-white);
   font-size: 20px;
   font-weight: normal;
   letter-spacing: 2px;
+}
+
+.piece-story-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--clr-white-20) transparent;
+}
+
+.piece-story-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+
+.piece-story-viewport::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background-color: var(--clr-white-20);
+}
+
+.piece-story-inner {
+  display: flex;
+  flex-direction: column;
 }
 
 .story-body {
@@ -375,6 +528,27 @@ watch(
 
 .story-body p:last-child {
   margin-bottom: 0;
+}
+
+/* 移动端「展开全文」按钮 */
+.expand-btn {
+  flex: none;
+  align-self: center;
+  margin-top: 14px;
+  padding: 8px 22px;
+  border: none;
+  border-radius: 9999px;
+  background-color: var(--clr-white-10);
+  color: var(--clr-white-70);
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 200ms;
+}
+
+.expand-btn:hover {
+  background-color: var(--clr-white-20);
+  color: var(--clr-white);
 }
 
 .empty {
@@ -430,7 +604,7 @@ watch(
     line-height: 1.8;
   }
 
-  /* 部件列表与故事区也改成上下排 */
+  /* 部件列表与故事区改成上下排；故事不再限高，改由折叠控制露出多少 */
   .panel-b {
     flex-direction: column;
     gap: 16px;
@@ -441,7 +615,23 @@ watch(
   }
 
   .piece-story {
-    min-height: 0;
+    height: auto;
+  }
+
+  /* 折叠：只露出 --collapse-height（部件按钮高度的两倍） */
+  .piece-story-inner.is-collapsed {
+    max-height: var(--collapse-height, 240px);
+    overflow: hidden;
+  }
+
+  /* 折叠且确实还有内容时，底部渐隐，提示故事没结束 */
+  .piece-story-inner.is-masked {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 56px), transparent);
+  }
+
+  .piece-story-viewport {
+    overflow: visible;
   }
 
   .piece-story-title {
