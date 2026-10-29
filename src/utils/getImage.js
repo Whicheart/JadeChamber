@@ -26,6 +26,11 @@ export function filter(name) {
   return new URL(`../assets/img/filter/UI_FilterIcon_${name}.webp`, import.meta.url).href
 }
 
+// 品质底图（角色卡 / 武器卡上半部分当背景用）
+export function quality(name) {
+  return new URL(`../assets/img/quality/${name}.webp`, import.meta.url).href
+}
+
 export function material(name, type) {
   return new URL(`../assets/material/${type}/1${name}.webp`, import.meta.url).href
 }

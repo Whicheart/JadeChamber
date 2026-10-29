@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { avatarIcon, filter } from '../src/utils/getImage.js'
+import { avatarIcon, filter, quality } from '../src/utils/getImage.js'
 
 test('avatarIcon：按文件名里的角色目录拼出图片地址', () => {
   assert.ok(
@@ -28,4 +28,9 @@ test('avatarIcon：空文件名返回空串，避免 <img> 拿到 undefined', ()
 test('filter：拼出筛选器图标地址', () => {
   assert.ok(filter('Weapon_Sword').endsWith('/assets/img/filter/UI_FilterIcon_Weapon_Sword.webp'))
   assert.ok(filter('Element_Pyro').endsWith('/filter/UI_FilterIcon_Element_Pyro.webp'))
+})
+
+test('quality：拼出品质底图地址（文件名就是接口里的 qualityType）', () => {
+  assert.ok(quality('QUALITY_ORANGE').endsWith('/assets/img/quality/QUALITY_ORANGE.webp'))
+  assert.ok(quality('QUALITY_ORANGE_SP').endsWith('/quality/QUALITY_ORANGE_SP.webp'))
 })

@@ -7,6 +7,10 @@ import * as getImage from '@/utils/getImage'
 import request from '@/utils/request'
 import { WEAPON_TYPES } from '@/utils/weapon'
 
+// 移动端卡片改用正面头像（Forward）：Gacha 是 1:3.2 的抽卡立绘，塞进手机窄卡会被裁成一条
+const forwardArt = (avatar) =>
+  getImage.avatarIcon(String(avatar?.GachaIconName || '').replace(/_Gacha$/, '_Forward'))
+
 // 元素与品质对应的主题色，筛选按钮激活时用它做高亮
 const elementColor = {
   GEO: 'rgb(251, 203, 105)',
@@ -18,6 +22,22 @@ const elementColor = {
   ANEMO: 'rgb(103, 253, 208)',
   QUALITY_PURPLE: 'rgb(180, 150, 240)',
   QUALITY_ORANGE: 'rgb(255, 180, 65)',
+}
+
+// 品质底图：接口的 qualityType 与 src/assets/img/quality 下的文件名一一对应，未知品质退到灰底
+const QUALITY_BACKGROUNDS = new Set([
+  'QUALITY_BLUE',
+  'QUALITY_GRAY',
+  'QUALITY_GREEN',
+  'QUALITY_ORANGE',
+  'QUALITY_ORANGE_SP',
+  'QUALITY_PURPLE',
+])
+
+const qualityArt = (avatar) => {
+  const quality = String(avatar?.qualityType || '')
+
+  return getImage.quality(QUALITY_BACKGROUNDS.has(quality) ? quality : 'QUALITY_GRAY')
 }
 
 // 筛选条件配置表（星级、元素、武器三组，通过 active 标记是否选中）
@@ -191,13 +211,26 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
           :aria-label="avatar.name"
           @click="$router.push(`/avatar/${avatar.id}`)"
         >
-          <img
-            class="avatar-art"
-            :src="getImage.avatarIcon(avatar.GachaIconName)"
-            :alt="avatar.name"
-            loading="lazy"
-            decoding="async"
-          />
+          <span class="avatar-figure">
+            <img
+              class="avatar-quality"
+              :src="qualityArt(avatar)"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <picture class="avatar-media">
+              <source media="(max-width: 768px)" :srcset="forwardArt(avatar)" />
+              <img
+                class="avatar-art"
+                :src="getImage.avatarIcon(avatar.GachaIconName)"
+                :alt="avatar.name"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          </span>
+          <span class="avatar-name">{{ avatar.name }}</span>
         </button>
       </div>
     </div>
@@ -248,6 +281,25 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   transition: 200ms;
 }
 
+/* 卡面：上半部分「品质底图 + 头像」，下半部分名字条，只有移动端启用 */
+.avatar-figure {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 品质底图只在移动端出现，桌面卡面是抽卡立绘 */
+.avatar-quality {
+  display: none;
+}
+
+/* picture 只是给 <source> 挂媒体条件的壳，尺寸与裁切交给内部的 img */
+.avatar-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* 立绘用原生 img + 懒加载：CSS 背景图不受 loading="lazy" 约束，会首屏全量下载 */
 .avatar-art {
   display: block;
@@ -257,6 +309,11 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   object-position: center 20%;
   transform: scale(1.05);
   transition: transform 200ms;
+}
+
+/* 名字条只在移动端出现（桌面是抽卡立绘，卡片里没有它的位置） */
+.avatar-name {
+  display: none;
 }
 
 .avatar-card:hover {
@@ -280,15 +337,66 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
     padding-bottom: 60px;
   }
 
-  /* 一行三张卡片左右，卡片高度等比压到 260px */
+  /* 一行三张卡片左右 */
   .avatar-grid {
     grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
     gap: 10px;
   }
 
+  /* 卡面：米白底 + 品质底图 + Forward，右下角统一圆角 */
   .avatar-card {
-    height: 260px;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    border-color: transparent;
     border-radius: 12px;
+    background-color: #f6f0e5;
+  }
+
+  /* 上半部分：品质底图垫底、Forward 压在上面，两层圆角由容器裁切 */
+  .avatar-figure {
+    position: relative;
+    flex: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-bottom-right-radius: 20px;
+  }
+
+  .avatar-quality {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .avatar-art {
+    object-fit: contain;
+    object-position: center bottom;
+    transform: none;
+  }
+
+  /* 名字条：米白底配深色字，过长时省略号截断 */
+  .avatar-name {
+    display: block;
+    padding: 6px 6px 8px;
+    overflow: hidden;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: #2b2b2b;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 </style>
