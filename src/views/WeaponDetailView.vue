@@ -67,7 +67,7 @@ const reachedStages = computed(() =>
   stagesReachedBy(weapon.value.materials || [], targetLevel.value),
 )
 
-// 同 id 的材料跨阶合并数量，排序保持首次出现的顺序（突破素材 → 精英素材 → 普通素材）
+// 同 id 的材料跨阶合并数量；排序由 mergeMaterials 统一保证：同家族相邻、组内高阶在前
 const materialSummary = computed(() => mergeMaterials(reachedStages.value))
 
 const totalMora = computed(() => moraTotal(reachedStages.value))

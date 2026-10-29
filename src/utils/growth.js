@@ -39,8 +39,9 @@ export function reachedStages(stages, level) {
 const materialFamily = (id) => String(id).slice(0, 4)
 
 // 把若干突破阶段的 costItems 按 id 累加
-// groupByFamily 用于角色材料清单：同家族相邻、组内高阶在前
-export function mergeMaterials(stages, { groupByFamily = false } = {}) {
+// 排序固定为「同家族相邻、组内高阶在前」，不提供关闭开关：
+// 角色与武器的材料清单共用这一口径，跨阶拖动等级时材料行不会跳序
+export function mergeMaterials(stages) {
   const merged = new Map()
 
   ;(stages || []).forEach((stage) => {
@@ -58,8 +59,6 @@ export function mergeMaterials(stages, { groupByFamily = false } = {}) {
   })
 
   const list = [...merged.values()]
-  if (!groupByFamily) return list
-
   const families = []
   list.forEach((item) => {
     const family = materialFamily(item.id)

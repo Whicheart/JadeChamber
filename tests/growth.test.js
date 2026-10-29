@@ -65,16 +65,16 @@ test('reachedStages：门槛 <= 等级即计入', () => {
   assert.equal(reachedStages(stages, 100).length, 6)
 })
 
-test('mergeMaterials：按 id 累加数量，保持首次出现顺序', () => {
+test('mergeMaterials：按 id 累加数量，且默认同家族相邻、组内 id 降序', () => {
   const merged = mergeMaterials(reachedStages(stages, 60))
 
   assert.deepEqual(merged, [
-    { id: 114001, name: '材料A', count: 6 },
     { id: 114002, name: '材料B', count: 6 },
+    { id: 114001, name: '材料A', count: 6 },
   ])
 })
 
-test('mergeMaterials：groupByFamily 时同家族相邻、组内 id 降序', () => {
+test('mergeMaterials：不传任何参数即按 id 前 4 位分族，组内高阶在前', () => {
   const mixed = [
     {
       costItems: [
@@ -86,8 +86,26 @@ test('mergeMaterials：groupByFamily 时同家族相邻、组内 id 降序', () 
   ]
 
   assert.deepEqual(
-    mergeMaterials(mixed, { groupByFamily: true }).map((item) => item.id),
+    mergeMaterials(mixed).map((item) => item.id),
     [114003, 114001, 134001],
+  )
+})
+
+test('mergeMaterials：前 4 位相同的多个材料族各自连续、族内降序', () => {
+  const sharedPrefix = [
+    {
+      costItems: [
+        { id: 112125, name: '磨损的执凭', count: 15 },
+        { id: 112140, name: '失色的焰剑', count: 23 },
+        { id: 112127, name: '霜镌的执凭', count: 27 },
+        { id: 112142, name: '宝饰的焰剑', count: 41 },
+      ],
+    },
+  ]
+
+  assert.deepEqual(
+    mergeMaterials(sharedPrefix).map((item) => item.id),
+    [112142, 112140, 112127, 112125],
   )
 })
 

@@ -138,7 +138,7 @@ const talentStagesOf = (targetLevel) =>
 const levelUpMaterials = computed(() => {
   const stages = promoteStages.value
   return {
-    items: mergeMaterials(stages, { groupByFamily: true }),
+    items: mergeMaterials(stages),
     mora: moraTotal(stages),
   }
 })
@@ -150,7 +150,7 @@ const talentMaterials = computed(() => {
     ...talentStagesOf(talentLevels.value.burst),
   ]
   return {
-    items: mergeMaterials(stages, { groupByFamily: true }),
+    items: mergeMaterials(stages),
     mora: moraTotal(stages),
   }
 })
