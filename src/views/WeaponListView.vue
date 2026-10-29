@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import * as getImgUrl from '@/utils/getImgUrl'
+import FilterBar from '@/components/FilterBar.vue'
+import FilterPanel from '@/components/FilterPanel.vue'
+import LoadState from '@/components/LoadState.vue'
 import request from '@/utils/request'
+import { WEAPON_TYPES, weaponLabel } from '@/utils/weapon'
 
 // 星级主题色，筛选按钮激活时用它做高亮
 const STAR_COLOR = {
@@ -13,15 +16,11 @@ const STAR_COLOR = {
 }
 
 // 武器类型：接口给的是 WEAPON_XXX 代码，图标复用筛选器素材
-const WEAPON_TYPES = [
-  { content: 'WEAPON_SWORD_ONE_HAND', iconName: 'Weapon_Sword', label: '单手剑' },
-  { content: 'WEAPON_CLAYMORE', iconName: 'Weapon_Claymore', label: '双手剑' },
-  { content: 'WEAPON_POLE', iconName: 'Weapon_Polearm', label: '长柄武器' },
-  { content: 'WEAPON_CATALYST', iconName: 'Weapon_Catalyst', label: '法器' },
-  { content: 'WEAPON_BOW', iconName: 'Weapon_Bow', label: '弓' },
-]
-
-const WEAPON_TYPE_LABEL = Object.fromEntries(WEAPON_TYPES.map((type) => [type.content, type.label]))
+const WEAPON_TYPE_OPTIONS = WEAPON_TYPES.map((type) => ({
+  content: type.code,
+  iconName: type.iconName,
+  label: type.label,
+}))
 
 // 筛选条件配置表（星级、武器类型两组，通过 active 标记是否选中）
 // 装备品质只有 4 星/5 星的图标素材，星级这一组统一用文字按钮，避免几种表示混在一行
@@ -40,7 +39,7 @@ const filter = ref([
   {
     id: 2,
     title: '武器类型',
-    buttons: WEAPON_TYPES.map((type, index) => ({
+    buttons: WEAPON_TYPE_OPTIONS.map((type, index) => ({
       id: 20 + index,
       ...type,
       color: 'var(--clr-white)',
@@ -65,6 +64,12 @@ function getActiveFilter(groupId) {
 const activeStars = computed(() => getActiveFilter(1))
 const activeTypes = computed(() => getActiveFilter(2))
 
+function toggleFilter(groupId, buttonId) {
+  const group = filter.value.find((g) => g.id === groupId)
+  const button = group?.buttons.find((b) => b.id === buttonId)
+  if (button) button.active = !button.active
+}
+
 // /weapon/list 只支持按 name 模糊查询，星级与武器类型都被后端忽略，
 // 故一次拉全量，三个条件全部在前端过滤（搜索也因此无需防抖）
 const filteredList = computed(() => {
@@ -77,23 +82,6 @@ const filteredList = computed(() => {
     return true
   })
 })
-
-function typeLabel(code) {
-  return WEAPON_TYPE_LABEL[code] || code || '—'
-}
-
-// 有图标的按钮用 CSS Mask 把单色图标当模板；文字按钮只传主题色
-function filterBtnStyle(btn) {
-  const style = { '--active-color': btn.color || 'var(--clr-white)' }
-
-  if (btn.iconName) {
-    const url = `url(${getImgUrl.filter(btn.iconName)})`
-    style.maskImage = url
-    style.WebkitMaskImage = url
-  }
-
-  return style
-}
 
 // 请求后端接口获取武器列表
 async function fetchWeapons() {
@@ -117,60 +105,18 @@ onMounted(fetchWeapons)
 <template>
   <div id="weapon-list-view">
     <!-- 顶部筛选栏：与角色板块同一套材质 -->
-    <div class="filter-bar">
-      <button
-        type="button"
-        class="filter-toggle"
-        :class="{ open: showFilterList }"
-        :aria-label="showFilterList ? '收起筛选条件' : '展开筛选条件'"
-        :aria-expanded="showFilterList"
-        @click="showFilterList = !showFilterList"
-      ></button>
-
-      <input
-        v-model="weaponSearchName"
-        class="filter-input"
-        type="text"
-        placeholder="搜索武器..."
-      />
-    </div>
+    <FilterBar v-model="weaponSearchName" v-model:open="showFilterList" placeholder="搜索武器..." />
 
     <!-- 可折叠的筛选条件面板（星级/武器类型） -->
-    <section v-if="showFilterList" class="filter-panel">
-      <div v-for="list in filter" :key="list.id" class="filter-group">
-        <h3 class="filter-title">{{ list.title }}</h3>
-        <div class="filter-buttons">
-          <button
-            v-for="btn in list.buttons"
-            :key="btn.id"
-            type="button"
-            class="filter-btn"
-            :class="{ active: btn.active, 'text-btn': !btn.iconName }"
-            :aria-pressed="btn.active"
-            :aria-label="btn.label || btn.iconName"
-            :style="filterBtnStyle(btn)"
-            @click="btn.active = !btn.active"
-          >
-            <template v-if="!btn.iconName">{{ btn.label }}</template>
-          </button>
-        </div>
-      </div>
-    </section>
+    <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 武器卡片列表 -->
     <div class="list-area">
-      <section v-if="failed" class="status-panel">
-        <p class="status-text">武器列表加载失败</p>
-        <button type="button" class="retry-btn" @click="fetchWeapons">重新加载</button>
-      </section>
+      <LoadState v-if="failed" failed failed-text="武器列表加载失败" @retry="fetchWeapons" />
 
-      <section v-else-if="loading" class="status-panel">
-        <p class="status-text">正在加载武器数据...</p>
-      </section>
+      <LoadState v-else-if="loading" loading loading-text="正在加载武器数据..." />
 
-      <section v-else-if="!filteredList.length" class="status-panel">
-        <p class="status-text">没有找到匹配的武器</p>
-      </section>
+      <LoadState v-else-if="!filteredList.length" empty-text="没有找到匹配的武器" />
 
       <div v-else class="weapon-grid">
         <button
@@ -192,7 +138,7 @@ onMounted(fetchWeapons)
               <span class="weapon-stars" :style="{ color: STAR_COLOR[weapon.rank] || '' }">
                 {{ '★'.repeat(weapon.rank || 0) }}
               </span>
-              <span class="weapon-type">{{ typeLabel(weapon.weaponType) }}</span>
+              <span class="weapon-type">{{ weaponLabel(weapon.weaponType) }}</span>
             </span>
           </span>
         </button>
@@ -212,137 +158,6 @@ onMounted(fetchWeapons)
   gap: 16px;
   margin-top: 10px;
   color: var(--clr-white);
-}
-
-/* 筛选栏：black-80 底 + white-10 细边 + 16px 圆角 */
-.filter-bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-}
-
-.filter-toggle {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 12px;
-  background-color: var(--clr-white-10);
-  background-image: url('@/assets/img/icon-filter-expand.svg');
-  background-size: 55%;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.filter-toggle:hover {
-  background-color: var(--clr-white-20);
-}
-
-.filter-toggle.open {
-  background-image: url('@/assets/img/icon-filter-collapse.svg');
-  background-color: var(--clr-white-20);
-}
-
-.filter-input {
-  flex: 1;
-  min-width: 0;
-  height: 44px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 12px;
-  background-color: var(--clr-transparent);
-  color: var(--clr-white);
-  font-family: inherit;
-  font-size: 16px;
-  letter-spacing: 1px;
-  transition: 150ms;
-}
-
-.filter-input::placeholder {
-  color: var(--clr-white-50);
-}
-
-.filter-input:focus {
-  outline: none;
-  background-color: var(--clr-white-10);
-}
-
-/* 筛选面板 */
-.filter-panel {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: 20px 24px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-}
-
-.filter-title {
-  margin-bottom: 10px;
-  color: var(--clr-white-70);
-  font-size: 15px;
-  font-weight: normal;
-  letter-spacing: 2px;
-}
-
-.filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.filter-btn {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 12px;
-  background-color: var(--clr-white-60);
-  mask-size: 80%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 80%;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-/* 星级用文字按钮：比 mask 图标窄，需要额外的内边距与文字样式 */
-.filter-btn.text-btn {
-  width: auto;
-  min-width: 62px;
-  padding: 0 14px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-60);
-  font-family: inherit;
-  font-size: 15px;
-  letter-spacing: 1px;
-}
-
-.filter-btn.text-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
-}
-
-.filter-btn.active {
-  background-color: var(--active-color);
-  box-shadow:
-    0 0 6px var(--active-color),
-    0 0 16px var(--active-color);
-}
-
-.filter-btn.text-btn.active {
-  color: var(--clr-black);
-  font-weight: bold;
 }
 
 /* 列表区：只负责滚动与底部留白 */
@@ -431,42 +246,6 @@ onMounted(fetchWeapons)
   letter-spacing: 1px;
 }
 
-/* 加载中 / 加载失败 / 空结果 */
-.status-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  min-height: 280px;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 16px;
-  background-color: var(--clr-white-10);
-}
-
-.status-text {
-  color: var(--clr-white-50);
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-.retry-btn {
-  padding: 8px 22px;
-  border: 1px solid var(--clr-white-20);
-  border-radius: 9999px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-70);
-  font-family: inherit;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.retry-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
-}
-
 /* ========== 窄屏（移动设备）适配 ========== */
 @media (max-width: 768px) {
   #weapon-list-view {
@@ -474,53 +253,6 @@ onMounted(fetchWeapons)
     height: calc(100% - 8px);
     gap: 12px;
     margin-top: 8px;
-  }
-
-  .filter-bar {
-    gap: 4px;
-    padding: 5px;
-    border-radius: 14px;
-  }
-
-  .filter-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background-size: 60%;
-  }
-
-  .filter-input {
-    height: 40px;
-    padding: 0 12px;
-    font-size: 15px;
-  }
-
-  .filter-panel {
-    gap: 14px;
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .filter-title {
-    margin-bottom: 8px;
-    font-size: 14px;
-    letter-spacing: 1px;
-  }
-
-  .filter-buttons {
-    gap: 8px;
-  }
-
-  .filter-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-  }
-
-  .filter-btn.text-btn {
-    min-width: 52px;
-    padding: 0 10px;
-    font-size: 14px;
   }
 
   .list-area {
@@ -555,14 +287,6 @@ onMounted(fetchWeapons)
 
   .weapon-meta {
     font-size: 12px;
-  }
-
-  .status-panel {
-    min-height: 200px;
-  }
-
-  .status-text {
-    font-size: 15px;
   }
 }
 </style>

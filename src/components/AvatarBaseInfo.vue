@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
-import * as getImgUrl from '@/utils/getImgUrl'
+import * as getImage from '@/utils/getImage'
 import * as format from '@/utils/format'
+import { mergeMaterials, moraTotal, reachedStages, valueAt } from '@/utils/growth'
+import { weaponFilterIcon } from '@/utils/weapon'
+import SliderRow from '@/components/SliderRow.vue'
 
 const props = defineProps({
   baseInfo: {
@@ -20,7 +23,7 @@ function pick(befor, after) {
 const info = computed(() => props.baseInfo || {})
 
 // ========== A 块：基础信息 ==========
-const splashUrl = computed(() => getImgUrl.avatarIcon(info.value.splashIconName))
+const splashUrl = computed(() => getImage.avatarIcon(info.value.splashIconName))
 
 const name = computed(() => info.value.name || '未知角色')
 const title = computed(() => info.value.title || '')
@@ -34,17 +37,9 @@ const starCount = computed(() => {
 })
 
 const weaponText = computed(() => info.value.weaponType || '')
-const WEAPON_ICON_MAP = {
-  单手剑: 'Weapon_Sword',
-  双手剑: 'Weapon_Claymore',
-  长柄武器: 'Weapon_Polearm',
-  弓: 'Weapon_Bow',
-  法器: 'Weapon_Catalyst',
-  枪: 'Weapon_Bow',
-}
 const weaponIcon = computed(() => {
-  const key = WEAPON_ICON_MAP[weaponText.value]
-  return key ? getImgUrl.filter(key) : ''
+  const iconName = weaponFilterIcon(weaponText.value)
+  return iconName ? getImage.filter(iconName) : ''
 })
 
 // 元素：after 优先
@@ -60,7 +55,7 @@ const ELEMENT_ICON_MAP = [
 ]
 const elementIcon = computed(() => {
   const hit = ELEMENT_ICON_MAP.find(([key]) => elementText.value.includes(key))
-  return hit ? getImgUrl.filter(hit[1]) : ''
+  return hit ? getImage.filter(hit[1]) : ''
 })
 
 const releaseDate = computed(() => {
@@ -101,17 +96,11 @@ const cvList = computed(() => {
 // ========== B 块：三维属性 ==========
 const level = ref(90)
 
-const attrAt = (list, lv) => {
-  if (!Array.isArray(list) || !list.length) return 0
-  const idx = Math.min(Math.max(lv, 1), list.length) - 1
-  return list[idx] ?? 0
-}
-
 const baseStats = computed(() => {
   const list = [
-    { name: '生命值', value: attrAt(info.value.hp, level.value), format: 'I' },
-    { name: '攻击力', value: attrAt(info.value.atk, level.value), format: 'I' },
-    { name: '防御力', value: attrAt(info.value.def, level.value), format: 'I' },
+    { name: '生命值', value: valueAt(info.value.hp, level.value), format: 'I' },
+    { name: '攻击力', value: valueAt(info.value.atk, level.value), format: 'I' },
+    { name: '防御力', value: valueAt(info.value.def, level.value), format: 'I' },
   ]
   if (info.value.elementMastery != null) {
     list.push({ name: '元素精通', value: info.value.elementMastery, format: 'I' })
@@ -125,7 +114,7 @@ const ascensionStat = computed(() => {
   const isMastery = statName === '元素精通'
   return {
     name: statName,
-    value: attrAt(info.value.ascensionStatValue, level.value),
+    value: valueAt(info.value.ascensionStatValue, level.value),
     format: isMastery ? 'I' : 'F1P',
   }
 })
@@ -139,61 +128,19 @@ const charLevel = ref(90)
 // 三个天赋等级
 const talentLevels = ref({ normal: 10, skill: 10, burst: 10 })
 
-// 突破前的等级上限；1 阶突破在 20 级触发，之后每阶的触发点是上一阶的 maxLevel
-const BASE_LEVEL_CAP = 20
-
-const promoteStages = computed(() => {
-  const stages = levelUpStages.value
-  let count = 0
-  for (let i = 0; i < stages.length; i++) {
-    const threshold = i === 0 ? BASE_LEVEL_CAP : (stages[i - 1].maxLevel ?? 0)
-    if (threshold <= charLevel.value) count++
-    else break
-  }
-  return stages.slice(0, count)
-})
+// 突破阶段：1 阶在 20 级触发，之后每阶的触发点是上一阶的 maxLevel
+const promoteStages = computed(() => reachedStages(levelUpStages.value, charLevel.value))
 
 // 某个天赋等级需要的材料（第 1 级无消耗）
 const talentStagesOf = (targetLevel) =>
   talentStages.value.filter((stage) => (stage.level ?? 0) <= targetLevel && (stage.level ?? 0) >= 2)
 
-// 材料按「同类聚在一起」排序：同一材质家族（id 前 4 位相同）归为一组，
-// 组与组之间按首次出现顺序固定，组内按 id 降序（高阶 → 低阶），拖动等级不会跳序
-const materialFamily = (id) => String(id).slice(0, 4)
-
-function mergeItems(groups) {
-  const map = new Map()
-  groups.forEach((items) => {
-    ;(items || []).forEach((item) => {
-      if (!item || item.id == null) return
-      const old = map.get(item.id)
-      if (old) old.count += item.count || 0
-      else
-        map.set(item.id, {
-          id: item.id,
-          name: item.name || String(item.id),
-          count: item.count || 0,
-        })
-    })
-  })
-
-  const list = [...map.values()]
-  const families = []
-  list.forEach((item) => {
-    const family = materialFamily(item.id)
-    if (!families.includes(family)) families.push(family)
-  })
-
-  return families.flatMap((family) =>
-    list.filter((item) => materialFamily(item.id) === family).sort((a, b) => b.id - a.id),
-  )
-}
-
 const levelUpMaterials = computed(() => {
   const stages = promoteStages.value
-  const items = mergeItems(stages.map((stage) => stage.costItems))
-  const mora = stages.reduce((sum, stage) => sum + (stage.mora || 0), 0)
-  return { items, mora }
+  return {
+    items: mergeMaterials(stages, { groupByFamily: true }),
+    mora: moraTotal(stages),
+  }
 })
 
 const talentMaterials = computed(() => {
@@ -202,9 +149,10 @@ const talentMaterials = computed(() => {
     ...talentStagesOf(talentLevels.value.skill),
     ...talentStagesOf(talentLevels.value.burst),
   ]
-  const items = mergeItems(stages.map((stage) => stage.costItems))
-  const mora = stages.reduce((sum, stage) => sum + (stage.mora || 0), 0)
-  return { items, mora }
+  return {
+    items: mergeMaterials(stages, { groupByFamily: true }),
+    mora: moraTotal(stages),
+  }
 })
 
 const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.value.mora)
@@ -271,10 +219,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
     <section class="panel panel-b">
       <h2 class="panel-title">属性成长</h2>
 
-      <div class="level-drag">
-        <span class="level-badge">Lv.{{ level }}</span>
-        <input v-model.number="level" class="slider" type="range" min="1" max="100" step="1" />
-      </div>
+      <SliderRow v-model="level" :max="100" />
 
       <div class="stat-grid">
         <div v-for="stat in baseStats" :key="stat.name" class="stat-card">
@@ -296,54 +241,10 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 
       <div class="material-layout">
         <div class="slider-group">
-          <div class="slider-item">
-            <span class="slider-label">角色等级</span>
-            <input
-              v-model.number="charLevel"
-              class="slider"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-            />
-            <span class="slider-num">Lv.{{ charLevel }}</span>
-          </div>
-          <div class="slider-item">
-            <span class="slider-label">普通攻击</span>
-            <input
-              v-model.number="talentLevels.normal"
-              class="slider"
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-            />
-            <span class="slider-num">Lv.{{ talentLevels.normal }}</span>
-          </div>
-          <div class="slider-item">
-            <span class="slider-label">元素战技</span>
-            <input
-              v-model.number="talentLevels.skill"
-              class="slider"
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-            />
-            <span class="slider-num">Lv.{{ talentLevels.skill }}</span>
-          </div>
-          <div class="slider-item">
-            <span class="slider-label">元素爆发</span>
-            <input
-              v-model.number="talentLevels.burst"
-              class="slider"
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-            />
-            <span class="slider-num">Lv.{{ talentLevels.burst }}</span>
-          </div>
+          <SliderRow v-model="charLevel" :max="100" label="角色等级" />
+          <SliderRow v-model="talentLevels.normal" :max="10" label="普通攻击" />
+          <SliderRow v-model="talentLevels.skill" :max="10" label="元素战技" />
+          <SliderRow v-model="talentLevels.burst" :max="10" label="元素爆发" />
         </div>
 
         <div class="material-list">
@@ -393,13 +294,6 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   flex-direction: column;
   gap: 24px;
   color: var(--clr-white);
-}
-
-.panel {
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  padding: 24px;
 }
 
 /* ========== A 块 ========== */
@@ -519,39 +413,9 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   margin-bottom: 16px;
 }
 
+/* 滑块本体在 SliderRow 里，这里只留 B 块下方的间距 */
 .level-drag {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   margin-bottom: 20px;
-}
-
-.level-badge {
-  min-width: 84px;
-  text-align: center;
-  font-size: 18px;
-  padding: 6px 12px;
-  border-radius: 9999px;
-  background-color: var(--clr-white-20);
-}
-
-.slider {
-  flex: 1;
-  height: 4px;
-  appearance: none;
-  border-radius: 9999px;
-  background: var(--clr-white-20);
-  outline: none;
-  cursor: pointer;
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--clr-white);
-  border: none;
 }
 
 .stat-grid {
@@ -589,24 +453,6 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-
-.slider-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.slider-label {
-  width: 84px;
-  font-size: 15px;
-  color: var(--clr-white-70);
-}
-
-.slider-num {
-  width: 62px;
-  text-align: right;
-  font-size: 15px;
 }
 
 .material-list {
@@ -714,14 +560,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   }
 
   .level-drag {
-    gap: 10px;
     margin-bottom: 14px;
-  }
-
-  .level-badge {
-    min-width: 64px;
-    padding: 4px 10px;
-    font-size: 16px;
   }
 
   .stat-grid {
@@ -746,16 +585,6 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   .slider-group {
     width: 100%;
     gap: 12px;
-  }
-
-  .slider-label {
-    width: 64px;
-    font-size: 14px;
-  }
-
-  .slider-num {
-    width: 54px;
-    font-size: 14px;
   }
 
   /* 材料名 + 数量在手机上两列太挤，改成单列 */

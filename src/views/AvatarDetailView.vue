@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 
@@ -9,6 +9,7 @@ import AvatarConstellations from '@/components/AvatarConstellations.vue'
 import AvatarOutfits from '@/components/AvatarOutfits.vue'
 import AvatarStories from '@/components/AvatarStories.vue'
 import AvatarVoices from '@/components/AvatarVoices.vue'
+import LoadState from '@/components/LoadState.vue'
 
 const route = useRoute()
 
@@ -22,14 +23,19 @@ const apiMap = {
   voices: 'voices',
 }
 
+const moduleKeys = Object.keys(apiMap)
+
+const LOADING_TEXT = '正在加载角色数据...'
+const FAILED_TEXT = '角色数据加载失败'
+
 // 顶部 Tab
 const navBtns = [
-  { id: 1, text: '基础信息' },
-  { id: 2, text: '天赋技能' },
-  { id: 3, text: '命座详情' },
-  { id: 4, text: '角色时装' },
-  { id: 5, text: '角色故事' },
-  { id: 6, text: '角色语音' },
+  { id: 1, text: '基础信息', module: 'baseInfo' },
+  { id: 2, text: '天赋技能', module: 'skills' },
+  { id: 3, text: '命座详情', module: 'constellations' },
+  { id: 4, text: '角色时装', module: 'outfits' },
+  { id: 5, text: '角色故事', module: 'stories' },
+  { id: 6, text: '角色语音', module: 'voices' },
 ]
 
 const avatarData = ref({
@@ -41,32 +47,35 @@ const avatarData = ref({
   voices: {},
 })
 
+// 每个接口单独记状态：loading / ok / error，互不牵连
+const moduleState = reactive(Object.fromEntries(moduleKeys.map((key) => [key, 'loading'])))
+
 const activeNavBtnId = ref(1)
-const loading = ref(true)
-const failed = ref(false)
 
-// 六个模块并发拉取，任一失败整页进入失败态（重试按钮会重新调用本函数）
-async function loadAvatar(avatarId) {
-  if (!avatarId) return
-
-  loading.value = true
-  failed.value = false
+// 拉单个模块；失败只把该模块标记成 error，其它 Tab 不受影响
+async function loadModule(avatarId, key) {
+  moduleState[key] = 'loading'
 
   try {
-    const keys = Object.keys(apiMap)
-    const results = await Promise.all(
-      keys.map((key) => request.get(`/api/avatar/${avatarId}/${apiMap[key]}`)),
-    )
-
-    keys.forEach((key, index) => {
-      avatarData.value[key] = results[index]
-    })
+    avatarData.value[key] = (await request.get(`/api/avatar/${avatarId}/${apiMap[key]}`)) || {}
+    moduleState[key] = 'ok'
   } catch (error) {
-    console.error('获取角色数据失败：', error)
-    failed.value = true
-  } finally {
-    loading.value = false
+    console.error(`获取角色 ${apiMap[key]} 数据失败：`, error)
+    avatarData.value[key] = {}
+    moduleState[key] = 'error'
   }
+}
+
+// 六个模块同时发起、各自完成即显示
+function loadAvatar(avatarId) {
+  if (!avatarId) return
+
+  moduleKeys.forEach((key) => loadModule(avatarId, key))
+}
+
+// 某个 Tab 的「重新加载」只重拉它自己那一个接口
+function retryModule(key) {
+  loadModule(route.params.avatarId, key)
 }
 
 // 换角色时回到第一个 Tab，避免停在上一个角色看过的页签
@@ -96,36 +105,88 @@ watch(
     </nav>
 
     <div class="content-area">
-      <section v-if="failed" class="status-panel">
-        <p class="status-text">角色数据加载失败</p>
-        <button type="button" class="retry-btn" @click="loadAvatar(route.params.avatarId)">
-          重新加载
-        </button>
-      </section>
+      <!-- 每个 Tab 只关心自己那个接口：先到的先显示，失败的只影响本 Tab -->
+      <template v-if="activeNavBtnId === 1">
+        <AvatarBaseInfo v-if="moduleState.baseInfo === 'ok'" :base-info="avatarData.baseInfo" />
+        <LoadState
+          v-else
+          :loading="moduleState.baseInfo === 'loading'"
+          :failed="moduleState.baseInfo === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('baseInfo')"
+        />
+      </template>
 
-      <section v-else-if="loading || !avatarData.baseInfo.name" class="status-panel">
-        <p class="status-text">正在加载角色数据...</p>
-      </section>
-
-      <!-- 数据加载完毕才渲染子组件，防止空指针报错 -->
-      <template v-else>
-        <AvatarBaseInfo v-if="activeNavBtnId === 1" :base-info="avatarData.baseInfo" />
+      <template v-else-if="activeNavBtnId === 2">
         <AvatarSkills
-          v-if="activeNavBtnId === 2"
+          v-if="moduleState.skills === 'ok'"
           :skills="avatarData.skills"
           :weapon-type="avatarData.baseInfo.weaponType"
         />
+        <LoadState
+          v-else
+          :loading="moduleState.skills === 'loading'"
+          :failed="moduleState.skills === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('skills')"
+        />
+      </template>
+
+      <template v-else-if="activeNavBtnId === 3">
         <AvatarConstellations
-          v-if="activeNavBtnId === 3"
+          v-if="moduleState.constellations === 'ok'"
           :constellations="avatarData.constellations"
         />
+        <LoadState
+          v-else
+          :loading="moduleState.constellations === 'loading'"
+          :failed="moduleState.constellations === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('constellations')"
+        />
+      </template>
+
+      <template v-else-if="activeNavBtnId === 4">
         <AvatarOutfits
-          v-if="activeNavBtnId === 4"
+          v-if="moduleState.outfits === 'ok'"
           :outfits="avatarData.outfits"
           :splash-icon-name="avatarData.baseInfo.splashIconName"
         />
-        <AvatarStories v-if="activeNavBtnId === 5" :stories="avatarData.stories" />
-        <AvatarVoices v-if="activeNavBtnId === 6" :voices="avatarData.voices" />
+        <LoadState
+          v-else
+          :loading="moduleState.outfits === 'loading'"
+          :failed="moduleState.outfits === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('outfits')"
+        />
+      </template>
+
+      <template v-else-if="activeNavBtnId === 5">
+        <AvatarStories v-if="moduleState.stories === 'ok'" :stories="avatarData.stories" />
+        <LoadState
+          v-else
+          :loading="moduleState.stories === 'loading'"
+          :failed="moduleState.stories === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('stories')"
+        />
+      </template>
+
+      <template v-else>
+        <AvatarVoices v-if="moduleState.voices === 'ok'" :voices="avatarData.voices" />
+        <LoadState
+          v-else
+          :loading="moduleState.voices === 'loading'"
+          :failed="moduleState.voices === 'error'"
+          :loading-text="LOADING_TEXT"
+          :failed-text="FAILED_TEXT"
+          @retry="retryModule('voices')"
+        />
       </template>
     </div>
   </div>
@@ -195,43 +256,7 @@ watch(
   display: none;
 }
 
-/* 加载中 / 加载失败 */
-.status-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  min-height: 280px;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 16px;
-  background-color: var(--clr-white-10);
-}
-
-.status-text {
-  color: var(--clr-white-50);
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-.retry-btn {
-  padding: 8px 22px;
-  border: 1px solid var(--clr-white-20);
-  border-radius: 9999px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-70);
-  font-family: inherit;
-  font-size: 15px;
-  cursor: pointer;
-  transition:
-    background-color 150ms,
-    color 150ms;
-}
-
-.retry-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
-}
+/* 加载中 / 加载失败由 LoadState 负责渲染 */
 
 /* ========== 窄屏（移动设备）适配 ========== */
 @media (max-width: 768px) {
@@ -260,14 +285,6 @@ watch(
 
   .content-area {
     padding-bottom: 60px;
-  }
-
-  .status-panel {
-    min-height: 200px;
-  }
-
-  .status-text {
-    font-size: 15px;
   }
 }
 

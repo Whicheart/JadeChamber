@@ -1,8 +1,11 @@
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import * as format from '@/utils/format'
-import * as getImgUrl from '@/utils/getImgUrl'
-import { hasImage } from '@/utils/hasImage'
+import * as getImage from '@/utils/getImage'
+import { resolveFirstImage } from '@/utils/hasImage'
+import { descHtml } from '@/utils/richText'
+import { weaponFilterIcon } from '@/utils/weapon'
+import SliderRow from '@/components/SliderRow.vue'
 
 const props = defineProps({
   skills: {
@@ -45,17 +48,9 @@ const combatSkills = computed(() =>
 // 接口给的是资源文件名（如 UI_AvatarIcon_Ayaka_Talent_ElementSkill），目录规则与角色头像一致；
 // 旧命名（如 Skill_S_Ayaka_02）没有对应素材，只能继续占位。
 // 普通攻击若没有专属素材，退回角色武器类型的过滤器图标。
-const WEAPON_FILTER_ICON = {
-  单手剑: 'Weapon_Sword',
-  双手剑: 'Weapon_Claymore',
-  长柄武器: 'Weapon_Polearm',
-  法器: 'Weapon_Catalyst',
-  弓: 'Weapon_Bow',
-}
-
 const normalAttackIconUrl = computed(() => {
-  const iconName = WEAPON_FILTER_ICON[props.weaponType]
-  return iconName ? getImgUrl.filter(iconName) : ''
+  const iconName = weaponFilterIcon(props.weaponType)
+  return iconName ? getImage.filter(iconName) : ''
 })
 
 // 素材按需陆续补充，缺失是常态：先探测文件是否真是图片，再决定渲染图标还是占位框。
@@ -67,7 +62,7 @@ function iconCandidates(skill) {
   const urlList = []
   const iconName = String(skill?.skillIconName || '')
 
-  if (iconName.startsWith('UI_AvatarIcon_')) urlList.push(getImgUrl.avatarIcon(iconName))
+  if (iconName.startsWith('UI_AvatarIcon_')) urlList.push(getImage.avatarIcon(iconName))
   if (typeOrder(skill) === 0 && normalAttackIconUrl.value) urlList.push(normalAttackIconUrl.value)
 
   return urlList
@@ -78,16 +73,7 @@ async function resolveSkillIcon(skill) {
   if (!id || pendingIcons.has(id)) return
 
   pendingIcons.add(id)
-
-  for (const url of iconCandidates(skill)) {
-    if (await hasImage(url)) {
-      iconState[id] = { status: 'ok', url }
-      pendingIcons.delete(id)
-      return
-    }
-  }
-
-  iconState[id] = { status: 'missing', url: '' }
+  iconState[id] = await resolveFirstImage(iconCandidates(skill))
   pendingIcons.delete(id)
 }
 
@@ -110,8 +96,8 @@ function levelOf(skill) {
   return levels[skill?.id] ?? 10
 }
 
-function setLevel(skill, event) {
-  levels[skill.id] = Number(event.target.value) || 1
+function setLevel(skill, value) {
+  levels[skill.id] = Number(value) || 1
 }
 
 function maxLevel(skill) {
@@ -125,47 +111,10 @@ function currentData(skill) {
   return list.find((item) => item.level === levelOf(skill)) || list[list.length - 1]
 }
 
-// ========== 文本处理 ==========
-// 库里的换行是字面量 \n（反斜杠 + n）
-function escapeHtml(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
-// 只认 <color=#RRGGBB(AA)> </color> <i> </i> 四种标签，其余内容一律转义
-const INLINE_TAG_RE = /<color=#([0-9A-Fa-f]{6,8})>|<\/color>|<i>|<\/i>/g
-
-function lineToHtml(line) {
-  let html = ''
-  let last = 0
-  let match = INLINE_TAG_RE.exec(line)
-
-  while (match) {
-    html += escapeHtml(line.slice(last, match.index))
-    if (match[1]) html += `<span style="color:#${match[1]}">`
-    else if (match[0] === '</color>') html += '</span>'
-    else if (match[0] === '<i>') html += '<em>'
-    else html += '</em>'
-    last = INLINE_TAG_RE.lastIndex
-    match = INLINE_TAG_RE.exec(line)
-  }
-
-  html += escapeHtml(line.slice(last))
-  return html
-}
-
 // descExtra 有内容时只展示它，否则退回 desc
 function mainDesc(item) {
   const extra = item?.descExtra
   return extra && String(extra).trim() ? extra : item?.desc
-}
-
-// 按字面量 \n 断行；LINK 外壳去掉、保留链接文字；保留颜色高亮与斜体
-function descHtml(text) {
-  if (!text) return ''
-  return String(text)
-    .split('\\n')
-    .map((line) => `<p>${lineToHtml(line.replace(/\{LINK#[^}]*\}|\{\/LINK\}/g, ''))}</p>`)
-    .join('')
 }
 
 // ========== 数值行 ==========
@@ -199,7 +148,7 @@ const passiveSkills = computed(() =>
   [...(data.value.passiveSkills || []), ...(data.value.specialProudSkills || [])].map((item) => {
     const iconName = item?.skillIconName
     const missing = !iconName || brokenIcons.has(iconName)
-    return { ...item, iconUrl: missing ? '' : getImgUrl.avatarIcon(iconName) }
+    return { ...item, iconUrl: missing ? '' : getImage.avatarIcon(iconName) }
   }),
 )
 </script>
@@ -227,18 +176,12 @@ const passiveSkills = computed(() =>
 
       <div class="skill-desc" v-html="descHtml(mainDesc(skill))"></div>
 
-      <div v-if="maxLevel(skill) > 1" class="level-drag">
-        <span class="level-badge">Lv.{{ levelOf(skill) }}</span>
-        <input
-          class="slider"
-          type="range"
-          min="1"
-          :max="maxLevel(skill)"
-          step="1"
-          :value="levelOf(skill)"
-          @input="setLevel(skill, $event)"
-        />
-      </div>
+      <SliderRow
+        v-if="maxLevel(skill) > 1"
+        :model-value="levelOf(skill)"
+        :max="maxLevel(skill)"
+        @update:model-value="setLevel(skill, $event)"
+      />
 
       <ul v-if="paramRows(currentData(skill)).length" class="attr-list">
         <li v-for="row in paramRows(currentData(skill))" :key="row.label">
@@ -286,10 +229,6 @@ const passiveSkills = computed(() =>
 }
 
 .panel {
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -362,40 +301,9 @@ const passiveSkills = computed(() =>
   color: var(--clr-white-50);
 }
 
-/* ========== 等级滑块 ========== */
+/* ========== 等级滑块（本体在 SliderRow） ========== */
 .level-drag {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   margin-top: 4px;
-}
-
-.level-badge {
-  min-width: 84px;
-  text-align: center;
-  font-size: 18px;
-  padding: 6px 12px;
-  border-radius: 9999px;
-  background-color: var(--clr-white-20);
-}
-
-.slider {
-  flex: 1;
-  height: 4px;
-  appearance: none;
-  border-radius: 9999px;
-  background: var(--clr-white-20);
-  outline: none;
-  cursor: pointer;
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--clr-white);
-  border: none;
 }
 
 /* ========== 数值行 ========== */
@@ -491,16 +399,6 @@ const passiveSkills = computed(() =>
   .passive-desc {
     font-size: 14px;
     line-height: 1.8;
-  }
-
-  .level-drag {
-    gap: 10px;
-  }
-
-  .level-badge {
-    min-width: 64px;
-    padding: 4px 10px;
-    font-size: 16px;
   }
 
   .attr-list li {

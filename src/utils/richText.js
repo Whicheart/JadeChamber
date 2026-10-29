@@ -4,6 +4,7 @@
  * 角色技能描述、武器精炼描述用的是同一套约定：
  * - 只认 <color=#RRGGBB(AA)>…</color> 与 <i>…</i> 两类标签，其余字符一律转义
  * - 换行是字面量 \n（反斜杠 + n），不是真正的换行符
+ * - {LINK#123}{/LINK} 是跳转标记，只保留中间的文字
  */
 
 export function escapeHtml(text) {
@@ -32,12 +33,30 @@ export function lineToHtml(line) {
   return html
 }
 
+// 去掉跳转外壳，只留文字
+export function stripLinkTags(text) {
+  return String(text ?? '').replace(/\{LINK#[^}]*\}|\{\/LINK\}/g, '')
+}
+
 // 按字面量 \n 断行，每行包一个 <p>；行内的颜色/斜体标签保留
 export function descHtml(text) {
   if (!text) return ''
 
   return String(text)
     .split('\\n')
-    .map((line) => `<p>${lineToHtml(line)}</p>`)
+    .map((line) => `<p>${lineToHtml(stripLinkTags(line))}</p>`)
     .join('')
+}
+
+// 语音文本：真实换行与字面量 \n 都算断行，去掉空行
+export function textLines(text) {
+  return String(text || '')
+    .split(/\r?\n|\\n/)
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+}
+
+// 语音文本逐行转成 HTML 片段数组（供 v-for + v-html）
+export function linesToHtml(text) {
+  return textLines(text).map((line) => lineToHtml(stripLinkTags(line)))
 }

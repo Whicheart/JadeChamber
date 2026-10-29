@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive } from 'vue'
-import * as getImgUrl from '@/utils/getImgUrl'
+import * as getImage from '@/utils/getImage'
+import { descHtml } from '@/utils/richText'
 
 const props = defineProps({
   constellations: {
@@ -22,7 +23,7 @@ const rows = computed(() =>
   list.value.map((item) => {
     const iconName = item?.constellationIconName
     const missing = !iconName || brokenIcons.has(item.id)
-    return { ...item, iconUrl: missing ? '' : getImgUrl.avatarIcon(iconName) }
+    return { ...item, iconUrl: missing ? '' : getImage.avatarIcon(iconName) }
   }),
 )
 
@@ -31,46 +32,10 @@ function onIconError(id) {
   brokenIcons.add(id)
 }
 
-// ========== 文本处理 ==========
-function escapeHtml(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
-// 只认 <color=#RRGGBB(AA)> </color> <i> </i> 四种标签，其余内容一律转义
-const INLINE_TAG_RE = /<color=#([0-9A-Fa-f]{6,8})>|<\/color>|<i>|<\/i>/g
-
-function lineToHtml(line) {
-  let html = ''
-  let last = 0
-  let match = INLINE_TAG_RE.exec(line)
-
-  while (match) {
-    html += escapeHtml(line.slice(last, match.index))
-    if (match[1]) html += `<span style="color:#${match[1]}">`
-    else if (match[0] === '</color>') html += '</span>'
-    else if (match[0] === '<i>') html += '<em>'
-    else html += '</em>'
-    last = INLINE_TAG_RE.lastIndex
-    match = INLINE_TAG_RE.exec(line)
-  }
-
-  html += escapeHtml(line.slice(last))
-  return html
-}
-
 // descExtra 有内容时只展示它，否则退回 desc
 function mainDesc(item) {
   const extra = item?.descExtra
   return extra && String(extra).trim() ? extra : item?.desc
-}
-
-// 按字面量 \n 断行；LINK 外壳去掉、保留链接文字；保留颜色高亮与斜体
-function descHtml(text) {
-  if (!text) return ''
-  return String(text)
-    .split('\\n')
-    .map((line) => `<p>${lineToHtml(line.replace(/\{LINK#[^}]*\}|\{\/LINK\}/g, ''))}</p>`)
-    .join('')
 }
 </script>
 
@@ -104,10 +69,6 @@ function descHtml(text) {
 }
 
 .panel {
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;

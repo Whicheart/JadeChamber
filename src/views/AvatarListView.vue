@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import * as getImgUrl from '@/utils/getImgUrl'
+import FilterBar from '@/components/FilterBar.vue'
+import FilterPanel from '@/components/FilterPanel.vue'
+import LoadState from '@/components/LoadState.vue'
+import * as getImage from '@/utils/getImage'
 import request from '@/utils/request'
+import { WEAPON_TYPES } from '@/utils/weapon'
 
 // 元素与品质对应的主题色，筛选按钮激活时用它做高亮
 const elementColor = {
@@ -17,38 +21,88 @@ const elementColor = {
 }
 
 // 筛选条件配置表（星级、元素、武器三组，通过 active 标记是否选中）
+// color 是按钮激活时的主题色，图标素材是单色 mask，靠它换色
 const filter = ref([
   {
     id: 1,
     title: '星级',
     buttons: [
-      { id: 11, content: 'QUALITY_PURPLE', iconName: 'Quality_Purple', active: false },
-      { id: 12, content: 'QUALITY_ORANGE', iconName: 'Quality_Orange', active: false },
+      {
+        id: 11,
+        content: 'QUALITY_PURPLE',
+        iconName: 'Quality_Purple',
+        color: elementColor.QUALITY_PURPLE,
+        active: false,
+      },
+      {
+        id: 12,
+        content: 'QUALITY_ORANGE',
+        iconName: 'Quality_Orange',
+        color: elementColor.QUALITY_ORANGE,
+        active: false,
+      },
     ],
   },
   {
     id: 2,
     title: '元素类型',
     buttons: [
-      { id: 21, content: 'PYRO', iconName: 'Element_Pyro', active: false },
-      { id: 22, content: 'HYDRO', iconName: 'Element_Hydro', active: false },
-      { id: 23, content: 'ANEMO', iconName: 'Element_Anemo', active: false },
-      { id: 24, content: 'ELECTRO', iconName: 'Element_Electro', active: false },
-      { id: 25, content: 'DENDRO', iconName: 'Element_Dendro', active: false },
-      { id: 26, content: 'CRYO', iconName: 'Element_Cryo', active: false },
-      { id: 27, content: 'GEO', iconName: 'Element_Geo', active: false },
+      {
+        id: 21,
+        content: 'PYRO',
+        iconName: 'Element_Pyro',
+        color: elementColor.PYRO,
+        active: false,
+      },
+      {
+        id: 22,
+        content: 'HYDRO',
+        iconName: 'Element_Hydro',
+        color: elementColor.HYDRO,
+        active: false,
+      },
+      {
+        id: 23,
+        content: 'ANEMO',
+        iconName: 'Element_Anemo',
+        color: elementColor.ANEMO,
+        active: false,
+      },
+      {
+        id: 24,
+        content: 'ELECTRO',
+        iconName: 'Element_Electro',
+        color: elementColor.ELECTRO,
+        active: false,
+      },
+      {
+        id: 25,
+        content: 'DENDRO',
+        iconName: 'Element_Dendro',
+        color: elementColor.DENDRO,
+        active: false,
+      },
+      {
+        id: 26,
+        content: 'CRYO',
+        iconName: 'Element_Cryo',
+        color: elementColor.CRYO,
+        active: false,
+      },
+      { id: 27, content: 'GEO', iconName: 'Element_Geo', color: elementColor.GEO, active: false },
     ],
   },
   {
     id: 3,
     title: '武器类型',
-    buttons: [
-      { id: 31, content: 'WEAPON_SWORD_ONE_HAND', iconName: 'Weapon_Sword', active: false },
-      { id: 32, content: 'WEAPON_CLAYMORE', iconName: 'Weapon_Claymore', active: false },
-      { id: 33, content: 'WEAPON_POLE', iconName: 'Weapon_Polearm', active: false },
-      { id: 34, content: 'WEAPON_CATALYST', iconName: 'Weapon_Catalyst', active: false },
-      { id: 35, content: 'WEAPON_BOW', iconName: 'Weapon_Bow', active: false },
-    ],
+    buttons: WEAPON_TYPES.map((type, index) => ({
+      id: 31 + index,
+      content: type.code,
+      iconName: type.iconName,
+      label: type.label,
+      color: 'var(--clr-white)',
+      active: false,
+    })),
   },
 ])
 
@@ -68,6 +122,13 @@ function getActiveFilter(groupId) {
 const filterStar = computed(() => getActiveFilter(1))
 const filterElem = computed(() => getActiveFilter(2))
 const filterWeapon = computed(() => getActiveFilter(3))
+
+// 筛选面板的按钮事件：同一组内可多选
+function toggleFilter(groupId, buttonId) {
+  const group = filter.value.find((g) => g.id === groupId)
+  const button = group?.buttons.find((b) => b.id === buttonId)
+  if (button) button.active = !button.active
+}
 
 // 请求后端接口获取角色列表
 async function fetchAvatars() {
@@ -108,67 +169,18 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
 
 <template>
   <div id="avatar-list-view">
-    <!-- 顶部筛选栏：与角色详情页的面板同一套材质 -->
-    <div class="filter-bar">
-      <button
-        type="button"
-        class="filter-toggle"
-        :class="{ open: showFilterList }"
-        :aria-label="showFilterList ? '收起筛选条件' : '展开筛选条件'"
-        :aria-expanded="showFilterList"
-        @click="showFilterList = !showFilterList"
-      ></button>
-
-      <input
-        v-model="avatarSearchName"
-        class="filter-input"
-        type="text"
-        placeholder="搜索角色..."
-      />
-    </div>
+    <FilterBar v-model="avatarSearchName" v-model:open="showFilterList" placeholder="搜索角色..." />
 
     <!-- 可折叠的筛选条件面板（星级/元素/武器） -->
-    <section v-if="showFilterList" class="filter-panel">
-      <div v-for="list in filter" :key="list.id" class="filter-group">
-        <h3 class="filter-title">{{ list.title }}</h3>
-        <div class="filter-buttons">
-          <!--
-            用 CSS Mask 把单色图标当模板，改背景色即可换色；
-            --active-color 把该元素/品质的主题色传给 CSS 做高亮。
-          -->
-          <button
-            v-for="btn in list.buttons"
-            :key="btn.id"
-            type="button"
-            class="filter-btn"
-            :class="{ active: btn.active }"
-            :aria-pressed="btn.active"
-            :aria-label="btn.iconName"
-            :style="{
-              maskImage: `url(${getImgUrl.filter(btn.iconName)})`,
-              WebkitMaskImage: `url(${getImgUrl.filter(btn.iconName)})`,
-              '--active-color': elementColor[btn.content] || 'var(--clr-white)',
-            }"
-            @click="btn.active = !btn.active"
-          ></button>
-        </div>
-      </div>
-    </section>
+    <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 角色卡片列表 -->
     <div class="list-area">
-      <section v-if="failed" class="status-panel">
-        <p class="status-text">角色列表加载失败</p>
-        <button type="button" class="retry-btn" @click="fetchAvatars">重新加载</button>
-      </section>
+      <LoadState v-if="failed" failed failed-text="角色列表加载失败" @retry="fetchAvatars" />
 
-      <section v-else-if="loading" class="status-panel">
-        <p class="status-text">正在加载角色数据...</p>
-      </section>
+      <LoadState v-else-if="loading" loading loading-text="正在加载角色数据..." />
 
-      <section v-else-if="!avatarList.length" class="status-panel">
-        <p class="status-text">没有找到匹配的角色</p>
-      </section>
+      <LoadState v-else-if="!avatarList.length" empty-text="没有找到匹配的角色" />
 
       <div v-else class="avatar-grid">
         <button
@@ -176,10 +188,17 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
           :key="avatar.id"
           type="button"
           class="avatar-card"
-          :style="{ backgroundImage: `url(${getImgUrl.avatarIcon(avatar.GachaIconName)})` }"
           :aria-label="avatar.name"
           @click="$router.push(`/avatar/${avatar.id}`)"
-        ></button>
+        >
+          <img
+            class="avatar-art"
+            :src="getImage.avatarIcon(avatar.GachaIconName)"
+            :alt="avatar.name"
+            loading="lazy"
+            decoding="async"
+          />
+        </button>
       </div>
     </div>
   </div>
@@ -198,116 +217,7 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   color: var(--clr-white);
 }
 
-/* 筛选栏：black-80 底 + white-10 细边 + 16px 圆角 */
-.filter-bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-}
-
-.filter-toggle {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 12px;
-  background-color: var(--clr-white-10);
-  background-image: url('@/assets/img/icon-filter-expand.svg');
-  background-size: 55%;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.filter-toggle:hover {
-  background-color: var(--clr-white-20);
-}
-
-.filter-toggle.open {
-  background-image: url('@/assets/img/icon-filter-collapse.svg');
-  background-color: var(--clr-white-20);
-}
-
-.filter-input {
-  flex: 1;
-  min-width: 0;
-  height: 44px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 12px;
-  background-color: var(--clr-transparent);
-  color: var(--clr-white);
-  font-family: inherit;
-  font-size: 16px;
-  letter-spacing: 1px;
-  transition: 150ms;
-}
-
-.filter-input::placeholder {
-  color: var(--clr-white-50);
-}
-
-.filter-input:focus {
-  outline: none;
-  background-color: var(--clr-white-10);
-}
-
-/* 筛选面板 */
-.filter-panel {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: 20px 24px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-}
-
-.filter-title {
-  margin-bottom: 10px;
-  color: var(--clr-white-70);
-  font-size: 15px;
-  font-weight: normal;
-  letter-spacing: 2px;
-}
-
-.filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.filter-btn {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 12px;
-  background-color: var(--clr-white-60);
-  mask-size: 80%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 80%;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.filter-btn.active {
-  background-color: var(--active-color);
-  box-shadow:
-    0 0 6px var(--active-color),
-    0 0 16px var(--active-color);
-}
-
-/* 列表区：面板自带内边距，这里只负责滚动与底部留白 */
+/* 列表区：只负责滚动与底部留白 */
 .list-area {
   flex: 1;
   min-height: 0;
@@ -333,53 +243,28 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   border: 1px solid var(--clr-white-10);
   border-radius: 16px;
   background-color: var(--clr-black-80);
-  background-size: 105% auto;
-  background-position: center 20%;
-  background-repeat: no-repeat;
   cursor: pointer;
   overflow: hidden;
   transition: 200ms;
 }
 
+/* 立绘用原生 img + 懒加载：CSS 背景图不受 loading="lazy" 约束，会首屏全量下载 */
+.avatar-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  transform: scale(1.05);
+  transition: transform 200ms;
+}
+
 .avatar-card:hover {
   border-color: var(--clr-white-30);
-  background-size: 100% auto;
 }
 
-/* 加载中 / 加载失败 / 空结果 */
-.status-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  min-height: 280px;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 16px;
-  background-color: var(--clr-white-10);
-}
-
-.status-text {
-  color: var(--clr-white-50);
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-.retry-btn {
-  padding: 8px 22px;
-  border: 1px solid var(--clr-white-20);
-  border-radius: 9999px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-70);
-  font-family: inherit;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.retry-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
+.avatar-card:hover .avatar-art {
+  transform: scale(1);
 }
 
 /* ========== 窄屏（移动设备）适配：60vw 的固定栏宽在手机上只剩两百多像素 ========== */
@@ -389,47 +274,6 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
     height: calc(100% - 8px);
     gap: 12px;
     margin-top: 8px;
-  }
-
-  .filter-bar {
-    gap: 4px;
-    padding: 5px;
-    border-radius: 14px;
-  }
-
-  .filter-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background-size: 60%;
-  }
-
-  .filter-input {
-    height: 40px;
-    padding: 0 12px;
-    font-size: 15px;
-  }
-
-  .filter-panel {
-    gap: 14px;
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .filter-title {
-    margin-bottom: 8px;
-    font-size: 14px;
-    letter-spacing: 1px;
-  }
-
-  .filter-buttons {
-    gap: 8px;
-  }
-
-  .filter-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
   }
 
   .list-area {
@@ -445,14 +289,6 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   .avatar-card {
     height: 260px;
     border-radius: 12px;
-  }
-
-  .status-panel {
-    min-height: 200px;
-  }
-
-  .status-text {
-    font-size: 15px;
   }
 }
 </style>

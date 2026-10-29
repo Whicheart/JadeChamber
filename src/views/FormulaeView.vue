@@ -198,10 +198,6 @@ onUpdated(renderMath)
   display: none;
 }
 .panel {
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;

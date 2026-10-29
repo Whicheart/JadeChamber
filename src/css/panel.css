@@ -1,0 +1,12 @@
+/**
+ * 面板材质
+ *
+ * 角色 / 武器 / 公式页面共用同一套卡片外观，这里只放「外观」；
+ * 各页面自己的排版差异（flex 方向、间距、标题字号）仍写在组件内。
+ */
+.panel {
+  border: 1px solid var(--clr-white-10);
+  border-radius: 16px;
+  background-color: var(--clr-black-80);
+  padding: 24px;
+}

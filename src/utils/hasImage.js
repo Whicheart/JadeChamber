@@ -21,3 +21,14 @@ export async function hasImage(url) {
 
   return ok
 }
+
+// 按候选顺序取第一张真实存在的图（并发探测，命中顺序仍按数组顺序）
+export async function resolveFirstImage(urls) {
+  const list = (urls || []).filter(Boolean)
+  if (!list.length) return { status: 'missing', url: '' }
+
+  const results = await Promise.all(list.map((url) => hasImage(url)))
+  const index = results.findIndex(Boolean)
+
+  return index < 0 ? { status: 'missing', url: '' } : { status: 'ok', url: list[index] }
+}

@@ -4,14 +4,19 @@ import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 import * as format from '@/utils/format'
 import { descHtml } from '@/utils/richText'
+import {
+  mergeMaterials,
+  moraTotal,
+  reachedStages as stagesReachedBy,
+  valueAt,
+} from '@/utils/growth'
+import LoadState from '@/components/LoadState.vue'
+import SliderRow from '@/components/SliderRow.vue'
 
 const route = useRoute()
 
 // 元素精通这类副属性是整数，其余（攻击力/暴击率/元素充能效率…）都是百分比
 const FLAT_SUBSTATS = new Set(['元素精通'])
-
-// 突破阶数对应等级上限：第 1 阶在 20 级，之后每一阶的门槛是上一阶的 maxLevel
-const FIRST_PROMOTE_LEVEL = 20
 
 const weapon = ref({})
 const loading = ref(true)
@@ -40,15 +45,15 @@ const refineText = computed(() => {
 
 // 数组下标 = 等级 - 1（接口给的是 100 级长度）
 function atkText(targetLevelValue) {
-  const value = weapon.value.atk?.[targetLevelValue - 1]
-  return value === undefined || value === null ? '—' : format.statValue('I', value)
+  const value = valueAt(weapon.value.atk, targetLevelValue, null)
+  return value === null ? '—' : format.statValue('I', value)
 }
 
 function subStatText(targetLevelValue) {
   if (!weapon.value.subStatName) return '—'
 
-  const value = weapon.value.subStatValue?.[targetLevelValue - 1]
-  if (value === undefined || value === null) return '—'
+  const value = valueAt(weapon.value.subStatValue, targetLevelValue, null)
+  if (value === null) return '—'
 
   return FLAT_SUBSTATS.has(weapon.value.subStatName)
     ? format.statValue('I', value)
@@ -58,33 +63,14 @@ function subStatText(targetLevelValue) {
 const affixHtml = computed(() => descHtml(weapon.value.affixDesc?.[refine.value - 1] || ''))
 
 // 目标等级下已经跨过的突破阶（与角色页同一套口径：门槛 <= 目标等级即计入）
-const reachedStages = computed(() => {
-  const stages = weapon.value.materials || []
-
-  return stages.filter((stage, index) => {
-    const threshold = index === 0 ? FIRST_PROMOTE_LEVEL : Number(stages[index - 1].maxLevel)
-    return threshold <= targetLevel.value
-  })
-})
+const reachedStages = computed(() =>
+  stagesReachedBy(weapon.value.materials || [], targetLevel.value),
+)
 
 // 同 id 的材料跨阶合并数量，排序保持首次出现的顺序（突破素材 → 精英素材 → 普通素材）
-const materialSummary = computed(() => {
-  const merged = new Map()
+const materialSummary = computed(() => mergeMaterials(reachedStages.value))
 
-  reachedStages.value.forEach((stage) => {
-    ;(stage.costItems || []).forEach((item) => {
-      const entry = merged.get(item.id) || { id: item.id, name: item.name, count: 0 }
-      entry.count += item.count || 0
-      merged.set(item.id, entry)
-    })
-  })
-
-  return [...merged.values()]
-})
-
-const totalMora = computed(() =>
-  reachedStages.value.reduce((sum, stage) => sum + (stage.mora || 0), 0),
-)
+const totalMora = computed(() => moraTotal(reachedStages.value))
 
 // 只裁掉一段故事首尾的空行，中间的空行是诗节分隔，必须保留
 function trimBlankEdges(lines) {
@@ -135,16 +121,14 @@ watch(
 
 <template>
   <div id="weapon-detail">
-    <section v-if="failed" class="status-panel">
-      <p class="status-text">武器数据加载失败</p>
-      <button type="button" class="retry-btn" @click="loadWeapon(route.params.weaponId)">
-        重新加载
-      </button>
-    </section>
+    <LoadState
+      v-if="failed"
+      failed
+      failed-text="武器数据加载失败"
+      @retry="loadWeapon(route.params.weaponId)"
+    />
 
-    <section v-else-if="loading || !weapon.name" class="status-panel">
-      <p class="status-text">正在加载武器数据...</p>
-    </section>
+    <LoadState v-else-if="loading || !weapon.name" loading loading-text="正在加载武器数据..." />
 
     <template v-else>
       <!-- ================= A 块：立绘 + 名称/星级/描述/属性成长 ================= -->
@@ -169,17 +153,7 @@ watch(
           <div class="growth">
             <h2 class="growth-title">属性成长</h2>
 
-            <div class="level-drag">
-              <span class="level-badge">Lv.{{ level }}</span>
-              <input
-                v-model.number="level"
-                class="slider"
-                type="range"
-                min="1"
-                max="100"
-                step="1"
-              />
-            </div>
+            <SliderRow v-model="level" :max="100" />
 
             <div class="stat-grid">
               <div class="stat-card">
@@ -201,17 +175,13 @@ watch(
 
         <p v-if="weapon.affixName" class="affix-name">{{ weapon.affixName }}</p>
 
-        <div v-if="refineCount > 1" class="level-drag">
-          <span class="level-badge">精炼 {{ refine }} 阶</span>
-          <input
-            v-model.number="refine"
-            class="slider"
-            type="range"
-            min="1"
-            :max="refineCount"
-            step="1"
-          />
-        </div>
+        <SliderRow
+          v-if="refineCount > 1"
+          v-model="refine"
+          :max="refineCount"
+          prefix="精炼 "
+          suffix=" 阶"
+        />
 
         <div v-if="refineCount" class="affix-desc" v-html="affixHtml"></div>
         <p v-else class="empty">该武器没有精炼效果</p>
@@ -222,17 +192,7 @@ watch(
         <div class="panel-head">
           <h2 class="panel-title">突破材料计算</h2>
 
-          <div class="level-drag head-drag">
-            <span class="level-badge">目标 Lv.{{ targetLevel }}</span>
-            <input
-              v-model.number="targetLevel"
-              class="slider"
-              type="range"
-              min="1"
-              max="90"
-              step="1"
-            />
-          </div>
+          <SliderRow v-model="targetLevel" :max="maxLevel" prefix="目标 Lv." />
         </div>
 
         <p class="calc-note">
@@ -294,10 +254,6 @@ watch(
 /* 面板：与角色板块同一套材质 */
 .panel {
   flex: none;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  padding: 24px;
 }
 
 .panel-title {
@@ -397,48 +353,9 @@ watch(
   letter-spacing: 2px;
 }
 
-.level-drag {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.head-drag {
-  flex: 0 1 340px;
-  margin-bottom: 0;
-}
-
+/* 滑块本体在 SliderRow 里，这里只留面板内的间距 */
 .growth .level-drag {
   margin-bottom: 14px;
-}
-
-.level-badge {
-  min-width: 84px;
-  text-align: center;
-  font-size: 18px;
-  padding: 6px 12px;
-  border-radius: 9999px;
-  background-color: var(--clr-white-20);
-}
-
-.slider {
-  flex: 1;
-  height: 4px;
-  appearance: none;
-  border-radius: 9999px;
-  background: var(--clr-white-20);
-  outline: none;
-  cursor: pointer;
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--clr-white);
-  border: none;
 }
 
 .stat-grid {
@@ -585,45 +502,6 @@ watch(
   padding: 8px 14px;
 }
 
-/* 加载中 / 加载失败 */
-.status-panel {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  min-height: 280px;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 16px;
-  background-color: var(--clr-white-10);
-}
-
-.status-text {
-  color: var(--clr-white-50);
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-.retry-btn {
-  padding: 8px 22px;
-  border: 1px solid var(--clr-white-20);
-  border-radius: 9999px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-70);
-  font-family: inherit;
-  font-size: 15px;
-  cursor: pointer;
-  transition:
-    background-color 150ms,
-    color 150ms;
-}
-
-.retry-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
-}
-
 /* ========== 窄屏（移动设备）适配 ========== */
 @media (max-width: 768px) {
   #weapon-detail {
@@ -653,11 +531,6 @@ watch(
   }
 
   .panel-head .panel-title {
-    margin-bottom: 0;
-  }
-
-  .head-drag {
-    flex: none;
     margin-bottom: 0;
   }
 
@@ -691,12 +564,6 @@ watch(
     padding: 12px;
   }
 
-  .level-badge {
-    min-width: 70px;
-    font-size: 15px;
-    padding: 5px 10px;
-  }
-
   .stat-grid {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
@@ -725,14 +592,6 @@ watch(
 
   .material-row {
     font-size: 14px;
-  }
-
-  .status-panel {
-    min-height: 200px;
-  }
-
-  .status-text {
-    font-size: 15px;
   }
 }
 </style>
