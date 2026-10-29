@@ -17,10 +17,6 @@ const router = createRouter({
       component: AvatarList,
     },
     {
-      path: '/formulae',
-      component: Formulae,
-    },
-    {
       path: '/avatar/:avatarId',
       component: () => import('@/views/AvatarDetailView.vue'),
     },
@@ -32,9 +28,18 @@ const router = createRouter({
       path: '/weapon/:weaponId',
       component: () => import('@/views/WeaponDetailView.vue'),
     },
-    // 以下页面暂未开放，视图文件保留为「待开发」模板，恢复功能时在此加回路由
-    // { path: '/artifacts', component: () => import('@/views/ArtifactListView.vue') },
-    // { path: '/artifacts/:artifactName', component: () => import('@/views/ArtifactDetailView.vue') },
+    {
+      path: '/artifacts',
+      component: () => import('@/views/ArtifactListView.vue'),
+    },
+    {
+      path: '/artifact/:setId',
+      component: () => import('@/views/ArtifactDetailView.vue'),
+    },
+    {
+      path: '/formulae',
+      component: Formulae,
+    },
     // { path: '/banners', component: () => import('@/views/BannerListView.vue') },
   ],
 })
