@@ -13,7 +13,8 @@
     "lint": "eslint . --cache",
     "lint:fix": "eslint . --fix --cache",
     "format": "prettier --write src/",
-    "format:check": "prettier --check \"src/**/*.{js,vue}\" \"*.js\""
+    "format:check": "prettier --check \"src/**/*.{js,vue}\" \"*.js\"",
+    "test": "node --test --test-isolation=none \"tests/**/*.test.js\""
   },
   "dependencies": {
     "@vueuse/core": "^15.0.0",
