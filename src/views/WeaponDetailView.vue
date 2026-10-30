@@ -120,7 +120,7 @@ watch(
 </script>
 
 <template>
-  <div id="weapon-detail">
+  <div id="weapon-detail" data-page-scroll>
     <LoadState
       v-if="failed"
       failed

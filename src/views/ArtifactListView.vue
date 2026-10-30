@@ -97,7 +97,7 @@ onMounted(fetchArtifacts)
     <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 套装卡片列表 -->
-    <div class="list-area">
+    <div class="list-area" data-page-scroll>
       <LoadState v-if="failed" failed failed-text="圣遗物列表加载失败" @retry="fetchArtifacts" />
 
       <LoadState v-else-if="loading" loading loading-text="正在加载圣遗物数据..." />

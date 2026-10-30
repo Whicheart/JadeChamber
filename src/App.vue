@@ -1,9 +1,16 @@
 <script setup>
+import { forwardWheel } from '@/utils/pageScroll'
+
 // const sidebarIsOpen = ref(false)
+
+// 页面的滚动区只有 60vw 宽，鼠标落在两侧空白上时 wheel 事件到不了它，这里补一条通路
+function onWheel(event) {
+  forwardWheel(event, event.currentTarget)
+}
 </script>
 
 <template>
-  <main>
+  <main @wheel="onWheel">
     <router-view v-slot="{ Component }">
       <KeepAlive>
         <component :is="Component" />

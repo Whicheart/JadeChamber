@@ -195,7 +195,7 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
     <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 角色卡片列表 -->
-    <div class="list-area">
+    <div class="list-area" data-page-scroll>
       <LoadState v-if="failed" failed failed-text="角色列表加载失败" @retry="fetchAvatars" />
 
       <LoadState v-else-if="loading" loading loading-text="正在加载角色数据..." />

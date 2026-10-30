@@ -104,7 +104,7 @@ watch(
       </button>
     </nav>
 
-    <div class="content-area">
+    <div class="content-area" data-page-scroll>
       <!-- 每个 Tab 只关心自己那个接口：先到的先显示，失败的只影响本 Tab -->
       <template v-if="activeNavBtnId === 1">
         <AvatarBaseInfo v-if="moduleState.baseInfo === 'ok'" :base-info="avatarData.baseInfo" />

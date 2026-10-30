@@ -111,7 +111,7 @@ onMounted(fetchWeapons)
     <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 武器卡片列表 -->
-    <div class="list-area">
+    <div class="list-area" data-page-scroll>
       <LoadState v-if="failed" failed failed-text="武器列表加载失败" @retry="fetchWeapons" />
 
       <LoadState v-else-if="loading" loading loading-text="正在加载武器数据..." />

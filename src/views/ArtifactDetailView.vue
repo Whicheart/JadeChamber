@@ -176,7 +176,7 @@ watch(
 </script>
 
 <template>
-  <div id="artifact-detail">
+  <div id="artifact-detail" data-page-scroll>
     <LoadState
       v-if="failed"
       failed
