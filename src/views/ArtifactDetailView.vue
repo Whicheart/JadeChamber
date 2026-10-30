@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 import LoadState from '@/components/LoadState.vue'
+import ReliquaryPropRank from '@/components/ReliquaryPropRank.vue'
 
 const route = useRoute()
 
@@ -277,6 +278,11 @@ watch(
           </template>
           <p v-else class="empty">暂无部件故事</p>
         </div>
+      </section>
+
+      <!-- ================= C 块：主属性 / 副属性数值表 ================= -->
+      <section class="panel panel-c">
+        <ReliquaryPropRank :rank-level="artifactSet.maxRankLevel || 5" />
       </section>
     </template>
   </div>
