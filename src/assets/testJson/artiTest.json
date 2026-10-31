@@ -1,0 +1,467 @@
+[
+  {
+    "id": 484420001,
+    "relicId": 48442,
+    "setId": 15048,
+    "rankLevel": 5,
+    "level": 20,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 4780,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 21 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.052 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.035 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.054 }
+    ]
+  },
+  {
+    "id": 474420001,
+    "relicId": 47442,
+    "setId": 15047,
+    "rankLevel": 5,
+    "level": 20,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 4780,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.041 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.054 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.073 }
+    ]
+  },
+  {
+    "id": 464520001,
+    "relicId": 46452,
+    "setId": 15046,
+    "rankLevel": 5,
+    "level": 20,
+    "mainPropName": "FIGHT_PROP_CHARGE_EFFICIENCY",
+    "mainPropValue": 0.518,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.051 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.109 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 51 }
+    ]
+  },
+  {
+    "id": 454320001,
+    "relicId": 45432,
+    "setId": 15045,
+    "rankLevel": 5,
+    "level": 20,
+    "mainPropName": "FIGHT_PROP_ATTACK_PERCENT",
+    "mainPropValue": 0.466,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 28 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.109 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.07 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 62 }
+    ]
+  },
+  {
+    "id": 444120001,
+    "relicId": 44412,
+    "setId": 15044,
+    "rankLevel": 5,
+    "level": 20,
+    "mainPropName": "FIGHT_PROP_ICE_ADD_HURT",
+    "mainPropValue": 0.466,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP", "propValue": 269 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.035 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.045 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 31 }
+    ]
+  },
+  {
+    "id": 434220001,
+    "relicId": 43422,
+    "setId": 15043,
+    "rankLevel": 5,
+    "level": 16,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 258,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 33 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.078 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.065 }
+    ]
+  },
+  {
+    "id": 484520001,
+    "relicId": 48452,
+    "setId": 15048,
+    "rankLevel": 5,
+    "level": 12,
+    "mainPropName": "FIGHT_PROP_ELEMENT_MASTERY",
+    "mainPropValue": 123,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 53 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.054 }
+    ]
+  },
+  {
+    "id": 474120001,
+    "relicId": 47412,
+    "setId": 15047,
+    "rankLevel": 5,
+    "level": 8,
+    "mainPropName": "FIGHT_PROP_PHYSICAL_ADD_HURT",
+    "mainPropValue": 0.285,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.045 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 269 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 23 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 23 }
+    ]
+  },
+  {
+    "id": 464320001,
+    "relicId": 46432,
+    "setId": 15046,
+    "rankLevel": 5,
+    "level": 4,
+    "mainPropName": "FIGHT_PROP_DEFENSE_PERCENT",
+    "mainPropValue": 0.186,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.039 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 239 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.124 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.047 }
+    ]
+  },
+  {
+    "id": 454520001,
+    "relicId": 45452,
+    "setId": 15045,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_CHARGE_EFFICIENCY",
+    "mainPropValue": 0.078,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 39 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.14 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.065 }
+    ]
+  },
+  {
+    "id": 444220001,
+    "relicId": 44422,
+    "setId": 15044,
+    "rankLevel": 5,
+    "level": 18,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 285,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.066 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 19 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.07 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 299 }
+    ]
+  },
+  {
+    "id": 434420001,
+    "relicId": 43442,
+    "setId": 15043,
+    "rankLevel": 5,
+    "level": 14,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 3561,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 62 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 33 }
+    ]
+  },
+  {
+    "id": 484120001,
+    "relicId": 48412,
+    "setId": 15048,
+    "rankLevel": 5,
+    "level": 10,
+    "mainPropName": "FIGHT_PROP_WIND_ADD_HURT",
+    "mainPropValue": 0.268,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.082 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.052 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 39 }
+    ]
+  },
+  {
+    "id": 474520001,
+    "relicId": 47452,
+    "setId": 15047,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_ATTACK_PERCENT",
+    "mainPropValue": 0.07,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 23 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.052 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.062 }
+    ]
+  },
+  {
+    "id": 464420001,
+    "relicId": 46442,
+    "setId": 15046,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 717,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.051 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.027 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.053 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 33 }
+    ]
+  },
+  {
+    "id": 454220001,
+    "relicId": 45422,
+    "setId": 15045,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 47,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 51 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.093 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.07 }
+    ]
+  },
+  {
+    "id": 444520001,
+    "relicId": 44452,
+    "setId": 15044,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_ATTACK_PERCENT",
+    "mainPropValue": 0.07,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 16 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.054 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 18 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.051 }
+    ]
+  },
+  {
+    "id": 434320001,
+    "relicId": 43432,
+    "setId": 15043,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_HEAL_ADD",
+    "mainPropValue": 0.054,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 19 }
+    ]
+  },
+  {
+    "id": 551200001,
+    "relicId": 55120,
+    "setId": 10005,
+    "rankLevel": 4,
+    "level": 16,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 233,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.062 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.109 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.053 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 478 }
+    ]
+  },
+  {
+    "id": 541500001,
+    "relicId": 54150,
+    "setId": 10004,
+    "rankLevel": 4,
+    "level": 16,
+    "mainPropName": "FIGHT_PROP_CHARGE_EFFICIENCY",
+    "mainPropValue": 0.388,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.14 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.053 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.066 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 209 }
+    ]
+  },
+  {
+    "id": 561200001,
+    "relicId": 56120,
+    "setId": 10006,
+    "rankLevel": 4,
+    "level": 12,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 187,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.031 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.053 }
+    ]
+  },
+  {
+    "id": 571300001,
+    "relicId": 57130,
+    "setId": 10007,
+    "rankLevel": 4,
+    "level": 8,
+    "mainPropName": "FIGHT_PROP_ELEMENT_MASTERY",
+    "mainPropValue": 84,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 46 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.07 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.073 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 657 }
+    ]
+  },
+  {
+    "id": 582200001,
+    "relicId": 58220,
+    "setId": 10008,
+    "rankLevel": 4,
+    "level": 4,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 94,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_HP", "propValue": 538 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.053 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 21 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 51 }
+    ]
+  },
+  {
+    "id": 591500001,
+    "relicId": 59150,
+    "setId": 10009,
+    "rankLevel": 4,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_ELEMENT_MASTERY",
+    "mainPropValue": 28,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.051 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.031 },
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 16 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 14 }
+    ]
+  },
+  {
+    "id": 551300001,
+    "relicId": 55130,
+    "setId": 10005,
+    "rankLevel": 4,
+    "level": 14,
+    "mainPropName": "FIGHT_PROP_CRITICAL",
+    "mainPropValue": 0.21,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 21 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.124 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.058 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 35 }
+    ]
+  },
+  {
+    "id": 541100001,
+    "relicId": 54110,
+    "setId": 10004,
+    "rankLevel": 4,
+    "level": 10,
+    "mainPropName": "FIGHT_PROP_GRASS_ADD_HURT",
+    "mainPropValue": 0.245,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.041 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.045 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 23 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.031 }
+    ]
+  },
+  {
+    "id": 561400001,
+    "relicId": 56140,
+    "setId": 10006,
+    "rankLevel": 4,
+    "level": 6,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 1793,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ATTACK_PERCENT", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 16 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.07 }
+    ]
+  },
+  {
+    "id": 571200001,
+    "relicId": 57120,
+    "setId": 10007,
+    "rankLevel": 4,
+    "level": 2,
+    "mainPropName": "FIGHT_PROP_ATTACK",
+    "mainPropValue": 70,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_DEFENSE", "propValue": 62 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.054 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.054 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 239 }
+    ]
+  },
+  {
+    "id": 582500001,
+    "relicId": 58250,
+    "setId": 10008,
+    "rankLevel": 4,
+    "level": 15,
+    "mainPropName": "FIGHT_PROP_CHARGE_EFFICIENCY",
+    "mainPropValue": 0.369,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_ATTACK", "propValue": 35 },
+      { "propName": "FIGHT_PROP_HP_PERCENT", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.047 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.093 }
+    ]
+  },
+  {
+    "id": 591300001,
+    "relicId": 59130,
+    "setId": 10009,
+    "rankLevel": 4,
+    "level": 9,
+    "mainPropName": "FIGHT_PROP_HEAL_ADD",
+    "mainPropValue": 0.175,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.065 },
+      { "propName": "FIGHT_PROP_HP", "propValue": 478 },
+      { "propName": "FIGHT_PROP_DEFENSE_PERCENT", "propValue": 0.073 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 42 }
+    ]
+  },
+  {
+    "id": 484420002,
+    "relicId": 48442,
+    "setId": 15048,
+    "rankLevel": 5,
+    "level": 0,
+    "mainPropName": "FIGHT_PROP_HP",
+    "mainPropValue": 717,
+    "appendProp": [
+      { "propName": "FIGHT_PROP_CRITICAL", "propValue": 0.039 },
+      { "propName": "FIGHT_PROP_CRITICAL_HURT", "propValue": 0.078 },
+      { "propName": "FIGHT_PROP_ELEMENT_MASTERY", "propValue": 16 },
+      { "propName": "FIGHT_PROP_CHARGE_EFFICIENCY", "propValue": 0.045 }
+    ]
+  }
+]
