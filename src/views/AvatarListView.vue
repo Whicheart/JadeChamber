@@ -5,6 +5,7 @@ import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
 import * as getImage from '@/utils/getImage'
 import request from '@/utils/request'
+import { useScrollMemory } from '@/utils/useScrollMemory'
 import { WEAPON_TYPES } from '@/utils/weapon'
 
 // 移动端卡片改用正面头像（Forward）：Gacha 是 1:3.2 的抽卡立绘，塞进手机窄卡会被裁成一条
@@ -126,6 +127,9 @@ const filter = ref([
   },
 ])
 
+// 列表区的滚动位置：KeepAlive 切走时 Vue 会把 DOM 移进隐藏容器，回来时靠它还原
+const { scrollRef, onScroll } = useScrollMemory()
+
 const showFilterList = ref(false) // 控制筛选面板的展开/收起
 const avatarSearchName = ref('') // 搜索框输入的名字
 const avatarList = ref([]) // 最终渲染的角色列表数据
@@ -195,7 +199,7 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
     <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 角色卡片列表 -->
-    <div class="list-area" data-page-scroll>
+    <div ref="scrollRef" class="list-area" data-page-scroll @scroll.passive="onScroll">
       <LoadState v-if="failed" failed failed-text="角色列表加载失败" @retry="fetchAvatars" />
 
       <LoadState v-else-if="loading" loading loading-text="正在加载角色数据..." />

@@ -4,6 +4,7 @@ import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
 import request from '@/utils/request'
+import { useScrollMemory } from '@/utils/useScrollMemory'
 import { WEAPON_TYPES, weaponLabel } from '@/utils/weapon'
 
 // 星级主题色，筛选按钮激活时用它做高亮
@@ -47,6 +48,9 @@ const filter = ref([
     })),
   },
 ])
+
+// 列表区的滚动位置：KeepAlive 切走时 Vue 会把 DOM 移进隐藏容器，回来时靠它还原
+const { scrollRef, onScroll } = useScrollMemory()
 
 const showFilterList = ref(false) // 控制筛选面板的展开/收起
 const weaponSearchName = ref('') // 搜索框输入的名字
@@ -111,7 +115,7 @@ onMounted(fetchWeapons)
     <FilterPanel :open="showFilterList" :groups="filter" @toggle="toggleFilter" />
 
     <!-- 武器卡片列表 -->
-    <div class="list-area" data-page-scroll>
+    <div ref="scrollRef" class="list-area" data-page-scroll @scroll.passive="onScroll">
       <LoadState v-if="failed" failed failed-text="武器列表加载失败" @retry="fetchWeapons" />
 
       <LoadState v-else-if="loading" loading loading-text="正在加载武器数据..." />
