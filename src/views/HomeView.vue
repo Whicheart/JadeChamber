@@ -19,7 +19,7 @@ const navList = [
     id: 2,
     title: '实用功能',
     buttons: [
-      { id: 21, content: '圣遗物', path: '/' },
+      { id: 21, content: '圣遗物计算器', path: '/arti-calc' },
       { id: 22, content: '公式大全', path: '/formulae' },
     ],
   },
