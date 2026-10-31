@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import request from '@/utils/request'
 import { statValue } from '@/utils/format'
+import { isPercentProp, propLabel } from '@/utils/reliquaryProp'
 import LoadState from '@/components/LoadState.vue'
 
 const props = defineProps({
@@ -26,43 +27,6 @@ watch(
   },
 )
 
-// propType → 中文名；生命值/攻击力/防御力 的固定值与百分比同名，用空格 + % 区分
-const PROP_LABELS = {
-  FIGHT_PROP_HP: '生命值',
-  FIGHT_PROP_HP_PERCENT: '生命值 %',
-  FIGHT_PROP_ATTACK: '攻击力',
-  FIGHT_PROP_ATTACK_PERCENT: '攻击力 %',
-  FIGHT_PROP_DEFENSE: '防御力',
-  FIGHT_PROP_DEFENSE_PERCENT: '防御力 %',
-  FIGHT_PROP_CRITICAL: '暴击率',
-  FIGHT_PROP_CRITICAL_HURT: '暴击伤害',
-  FIGHT_PROP_CHARGE_EFFICIENCY: '元素充能效率',
-  FIGHT_PROP_HEAL_ADD: '治疗加成',
-  FIGHT_PROP_ELEMENT_MASTERY: '元素精通',
-  FIGHT_PROP_FIRE_ADD_HURT: '火元素伤害加成',
-  FIGHT_PROP_ELEC_ADD_HURT: '雷元素伤害加成',
-  FIGHT_PROP_WATER_ADD_HURT: '水元素伤害加成',
-  FIGHT_PROP_WIND_ADD_HURT: '风元素伤害加成',
-  FIGHT_PROP_ROCK_ADD_HURT: '岩元素伤害加成',
-  FIGHT_PROP_GRASS_ADD_HURT: '草元素伤害加成',
-  FIGHT_PROP_ICE_ADD_HURT: '冰元素伤害加成',
-  FIGHT_PROP_PHYSICAL_ADD_HURT: '物理伤害加成',
-  FIGHT_PROP_FIRE_SUB_HURT: '火元素抗性',
-}
-
-// 接口里没有单位信息，只能按词条名判断：百分比类的值要 ×100 显示
-function isPercentProp(propType) {
-  return (
-    propType.endsWith('_PERCENT') ||
-    propType.endsWith('_ADD_HURT') ||
-    propType.endsWith('_SUB_HURT') ||
-    propType === 'FIGHT_PROP_CRITICAL' ||
-    propType === 'FIGHT_PROP_CRITICAL_HURT' ||
-    propType === 'FIGHT_PROP_CHARGE_EFFICIENCY' ||
-    propType === 'FIGHT_PROP_HEAL_ADD'
-  )
-}
-
 // 主属性是游戏内一位小数的显示口径，副属性按两位小数，否则 1.17% 会被四舍五入成 1.2%
 function formatValue(propType, value, digits) {
   const format = isPercentProp(propType) ? (digits === 2 ? 'F2P' : 'F1P') : 'I'
@@ -83,7 +47,7 @@ const currentRank = computed(
 function toRows(list) {
   return (list || []).map((prop) => ({
     propType: prop.propType,
-    label: PROP_LABELS[prop.propType] || prop.propType,
+    label: propLabel(prop.propType),
     values: prop.values || [],
   }))
 }
