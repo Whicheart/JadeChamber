@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 import * as format from '@/utils/format'
+import * as getImage from '@/utils/getImage'
 import { descHtml } from '@/utils/richText'
 import {
   mergeMaterials,
@@ -26,6 +27,26 @@ const level = ref(90) // A 块属性成长滑块（接口按 100 级给数据）
 const targetLevel = ref(90) // C 块突破材料计算滑块
 const refine = ref(1)
 
+// 40 级是武器立绘的觉醒分界：低于 40 级用未突破的图标，40 级起换成 Awaken 版本
+const AWAKEN_LEVEL = 40
+
+// 加载失败的图源记下来，下次计算时跳过（少数低星武器没有 Awaken 素材）
+const brokenArt = reactive(new Set())
+
+const artUrl = computed(() => {
+  // base-info 的 icon 形如 UI_EquipIcon_Bow_Alkonost，awakenIcon 只是多了 _Awaken 后缀
+  const baseName = String(weapon.value.icon || '').replace(/_Awaken$/, '')
+  if (!baseName) return ''
+
+  const names = level.value >= AWAKEN_LEVEL ? [`${baseName}_Awaken`, baseName] : [baseName]
+
+  return names.map((name) => getImage.weaponIcon(name)).find((url) => !brokenArt.has(url)) || ''
+})
+
+function onArtError(event) {
+  brokenArt.add(event.target.src)
+}
+
 // 突破阶数就是等级上限，最后一阶的 maxLevel 即满级（多数 90，低星武器 70）
 const maxLevel = computed(() => {
   const stages = weapon.value.materials || []
@@ -35,13 +56,6 @@ const maxLevel = computed(() => {
 
 // affixDesc 的条数就是精炼档数：0 条没有被动，1 条没有精炼，5 条是常规五星
 const refineCount = computed(() => (weapon.value.affixDesc || []).length)
-
-// 概要行的被动档位描述：0 条没被动，1 条是固定效果，5 条才是可精炼
-const refineText = computed(() => {
-  if (!refineCount.value) return '无被动效果'
-  if (refineCount.value === 1) return '无精炼'
-  return `精炼 ${refineCount.value} 档`
-})
 
 // 数组下标 = 等级 - 1（接口给的是 100 级长度）
 function atkText(targetLevelValue) {
@@ -133,9 +147,18 @@ watch(
     <template v-else>
       <!-- ================= A 块：立绘 + 名称/星级/描述/属性成长 ================= -->
       <section class="panel panel-a">
-        <!-- 武器立绘素材尚未入库，先用占位框 -->
-        <div class="art-box">
-          <span class="art-text">立绘待补充</span>
+        <!-- 40 级起换成 Awaken（突破后）的图标；虚线占位框只在没有图源时出现 -->
+        <div class="art-box" :class="{ 'is-placeholder': !artUrl }">
+          <img
+            v-if="artUrl"
+            class="art"
+            :src="artUrl"
+            :alt="`${weapon.name} 武器图标`"
+            loading="lazy"
+            decoding="async"
+            @error="onArtError"
+          />
+          <span v-else class="art-text">立绘待补充</span>
         </div>
 
         <div class="info-box">
@@ -144,26 +167,23 @@ watch(
             <span class="stars">{{ '★'.repeat(weapon.rankLevel || 0) }}</span>
           </div>
 
-          <p class="meta-line">
-            {{ weapon.weaponType || '—' }} · {{ refineText }} · 满级 Lv.{{ maxLevel }}
-          </p>
-
           <p v-if="weapon.desc" class="desc">{{ weapon.desc }}</p>
+        </div>
 
-          <div class="growth">
-            <h2 class="growth-title">属性成长</h2>
+        <!-- 属性成长占 A 块整行 -->
+        <div class="growth">
+          <h2 class="growth-title">属性成长</h2>
 
-            <SliderRow v-model="level" :max="100" />
+          <SliderRow v-model="level" :max="100" />
 
-            <div class="stat-grid">
-              <div class="stat-card">
-                <span class="stat-name">基础攻击力</span>
-                <span class="stat-value">{{ atkText(level) }}</span>
-              </div>
-              <div v-if="weapon.subStatName" class="stat-card">
-                <span class="stat-name">{{ weapon.subStatName }}</span>
-                <span class="stat-value">{{ subStatText(level) }}</span>
-              </div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <span class="stat-name">基础攻击力</span>
+              <span class="stat-value">{{ atkText(level) }}</span>
+            </div>
+            <div v-if="weapon.subStatName" class="stat-card">
+              <span class="stat-name">{{ weapon.subStatName }}</span>
+              <span class="stat-value">{{ subStatText(level) }}</span>
             </div>
           </div>
         </div>
@@ -276,22 +296,39 @@ watch(
   margin-bottom: 0;
 }
 
-/* ========== A 块 ========== */
+/* ========== A 块：上排「立绘 + 名称/星级/简介」，下排「属性成长」 ========== */
 .panel-a {
-  display: flex;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px 32px;
 }
 
+/* 武器图标在两端都是固定 175 × 175 的方框，图完整落在框内不裁切 */
 .art-box {
-  flex: none;
-  width: 320px;
-  min-height: 420px;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  width: 175px;
+  height: 175px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
+}
+
+/* 只有真正没有图源时才画虚线占位框，有图时不加任何边框与底色 */
+.art-box.is-placeholder {
+  padding: 16px;
   border: 1px dashed var(--clr-white-20);
   border-radius: 16px;
   background-color: var(--clr-white-10);
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .art-text {
@@ -301,7 +338,8 @@ watch(
 }
 
 .info-box {
-  flex: 1;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -337,9 +375,10 @@ watch(
   line-height: 1.9;
 }
 
-/* 属性成长：滑块 + 两个属性卡 */
+/* 属性成长：占 A 块整行，滑块 + 两个属性卡 */
 .growth {
-  margin-top: auto;
+  grid-column: 1 / -1;
+  grid-row: 2;
   padding: 16px;
   border-radius: 12px;
   background-color: var(--clr-white-10);
@@ -534,16 +573,28 @@ watch(
     margin-bottom: 0;
   }
 
-  /* 立绘与信息并排会挤成一列，改成上下排 */
+  /* 窄屏改成上下排：图标 → 名称/简介 → 属性成长 */
   .panel-a {
+    display: flex;
     flex-direction: column;
     gap: 16px;
   }
 
+  /* 移动端与桌面同尺寸（175 × 175），只是改成水平居中 */
   .art-box {
-    width: 100%;
-    min-height: 200px;
+    align-self: center;
+    width: 175px;
+    height: 175px;
+    padding: 0;
+  }
+
+  .art-box.is-placeholder {
+    padding: 12px;
     border-radius: 12px;
+  }
+
+  .growth {
+    margin-top: 0;
   }
 
   .name-row h1 {
