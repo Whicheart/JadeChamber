@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
+import MediaCard from '@/components/MediaCard.vue'
+import * as getImage from '@/utils/getImage'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
 import { WEAPON_TYPES, weaponLabel } from '@/utils/weapon'
@@ -15,6 +17,27 @@ const STAR_COLOR = {
   2: 'rgb(110, 200, 155)',
   1: 'rgb(170, 170, 170)',
 }
+
+// 星级 → 品质底图：与角色卡共用 src/assets/img/quality 那 6 张图
+const QUALITY_BY_RANK = {
+  5: 'QUALITY_ORANGE',
+  4: 'QUALITY_PURPLE',
+  3: 'QUALITY_BLUE',
+  2: 'QUALITY_GREEN',
+  1: 'QUALITY_GRAY',
+}
+
+const qualityArt = (weapon) => getImage.quality(QUALITY_BY_RANK[weapon?.rank] ?? 'QUALITY_GRAY')
+
+// 桌面端用抽卡立绘，移动端用无后缀的武器图标（UI_EquipIcon_…_Gacha → UI_EquipIcon_…），
+// 后者是 256 × 256 的方形线稿，正好配移动端 1 : 1 的卡面
+const gachaArt = (weapon) =>
+  weapon.GachaIconName ? getImage.weaponGacha(weapon.GachaIconName) : ''
+
+const iconArt = (weapon) =>
+  weapon.GachaIconName
+    ? getImage.weaponIcon(String(weapon.GachaIconName).replace(/_Gacha$/, ''))
+    : ''
 
 // 武器类型：接口给的是 WEAPON_XXX 代码，图标复用筛选器素材
 const WEAPON_TYPE_OPTIONS = WEAPON_TYPES.map((type) => ({
@@ -122,30 +145,20 @@ onMounted(fetchWeapons)
 
       <LoadState v-else-if="!filteredList.length" empty-text="没有找到匹配的武器" />
 
-      <div v-else class="weapon-grid">
-        <button
+      <div v-else class="media-grid">
+        <MediaCard
           v-for="weapon in filteredList"
           :key="weapon.id"
-          type="button"
-          class="weapon-card"
-          :aria-label="weapon.name"
+          :image="gachaArt(weapon)"
+          :mobile-image="iconArt(weapon)"
+          :quality="qualityArt(weapon)"
+          :name="weapon.name"
+          :label="`${weapon.name}（${weapon.rank}★ ${weaponLabel(weapon.weaponType)}）`"
+          placeholder="立绘待补充"
+          ratio="1 / 2.5"
+          fit="contain"
           @click="$router.push(`/weapon/${weapon.id}`)"
-        >
-          <!-- 武器立绘素材尚未入库，统一用占位框，等素材补齐后换成 <img> -->
-          <span class="weapon-art">
-            <span class="weapon-art-text">立绘待补充</span>
-          </span>
-
-          <span class="weapon-info">
-            <span class="weapon-name">{{ weapon.name }}</span>
-            <span class="weapon-meta">
-              <span class="weapon-stars" :style="{ color: STAR_COLOR[weapon.rank] || '' }">
-                {{ '★'.repeat(weapon.rank || 0) }}
-              </span>
-              <span class="weapon-type">{{ weaponLabel(weapon.weaponType) }}</span>
-            </span>
-          </span>
-        </button>
+        />
       </div>
     </div>
   </div>
@@ -177,79 +190,6 @@ onMounted(fetchWeapons)
   display: none;
 }
 
-.weapon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
-}
-
-.weapon-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  height: 300px;
-  padding: 12px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  cursor: pointer;
-  overflow: hidden;
-  transition: 200ms;
-}
-
-.weapon-card:hover {
-  border-color: var(--clr-white-30);
-  background-color: var(--clr-black-90);
-}
-
-/* 立绘占位框：与角色板块的 icon-placeholder 同一套虚线框 */
-.weapon-art {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 12px;
-  background-color: var(--clr-white-10);
-}
-
-.weapon-art-text {
-  color: var(--clr-white-40);
-  font-size: 13px;
-  letter-spacing: 1px;
-}
-
-.weapon-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 4px 2px;
-  text-align: left;
-}
-
-.weapon-name {
-  color: var(--clr-white);
-  font-size: 16px;
-  letter-spacing: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.weapon-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--clr-white-50);
-  font-size: 13px;
-}
-
-.weapon-stars {
-  letter-spacing: 1px;
-}
-
 /* ========== 窄屏（移动设备）适配 ========== */
 @media (max-width: 768px) {
   #weapon-list-view {
@@ -261,36 +201,6 @@ onMounted(fetchWeapons)
 
   .list-area {
     padding-bottom: 60px;
-  }
-
-  /* 一行两张卡片，卡片等比压到 220px */
-  .weapon-grid {
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-    gap: 10px;
-  }
-
-  .weapon-card {
-    height: 220px;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 12px;
-  }
-
-  .weapon-art {
-    border-radius: 10px;
-  }
-
-  .weapon-art-text {
-    font-size: 11px;
-  }
-
-  .weapon-name {
-    font-size: 14px;
-    letter-spacing: 0;
-  }
-
-  .weapon-meta {
-    font-size: 12px;
   }
 }
 </style>

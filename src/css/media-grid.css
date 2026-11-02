@@ -1,0 +1,14 @@
+/* 图鉴列表的卡片网格（角色、武器共用，卡片本身见 components/MediaCard.vue） */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  /* 一行三张卡片左右 */
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 10px;
+  }
+}

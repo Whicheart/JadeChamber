@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import './css/global.css'
 import './css/panel.css'
+import './css/media-grid.css'
 
 const app = createApp(App)
 

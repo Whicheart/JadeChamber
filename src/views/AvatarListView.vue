@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
+import MediaCard from '@/components/MediaCard.vue'
 import * as getImage from '@/utils/getImage'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
@@ -206,36 +207,17 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
 
       <LoadState v-else-if="!avatarList.length" empty-text="没有找到匹配的角色" />
 
-      <div v-else class="avatar-grid">
-        <button
+      <div v-else class="media-grid">
+        <MediaCard
           v-for="avatar in avatarList"
           :key="avatar.id"
-          type="button"
-          class="avatar-card"
-          :aria-label="avatar.name"
+          :image="getImage.avatarIcon(avatar.GachaIconName)"
+          :mobile-image="forwardArt(avatar)"
+          :quality="qualityArt(avatar)"
+          :name="avatar.name"
+          ratio="1 / 2.5"
           @click="$router.push(`/avatar/${avatar.id}`)"
-        >
-          <span class="avatar-figure">
-            <img
-              class="avatar-quality"
-              :src="qualityArt(avatar)"
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            <picture class="avatar-media">
-              <source media="(max-width: 768px)" :srcset="forwardArt(avatar)" />
-              <img
-                class="avatar-art"
-                :src="getImage.avatarIcon(avatar.GachaIconName)"
-                :alt="avatar.name"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
-          </span>
-          <span class="avatar-name">{{ avatar.name }}</span>
-        </button>
+        />
       </div>
     </div>
   </div>
@@ -267,67 +249,6 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
   display: none;
 }
 
-.avatar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-}
-
-.avatar-card {
-  width: 100%;
-  height: 400px;
-  padding: 0;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  cursor: pointer;
-  overflow: hidden;
-  transition: 200ms;
-}
-
-/* 卡面：上半部分「品质底图 + 头像」，下半部分名字条，只有移动端启用 */
-.avatar-figure {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* 品质底图只在移动端出现，桌面卡面是抽卡立绘 */
-.avatar-quality {
-  display: none;
-}
-
-/* picture 只是给 <source> 挂媒体条件的壳，尺寸与裁切交给内部的 img */
-.avatar-media {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* 立绘用原生 img + 懒加载：CSS 背景图不受 loading="lazy" 约束，会首屏全量下载 */
-.avatar-art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 20%;
-  transform: scale(1.05);
-  transition: transform 200ms;
-}
-
-/* 名字条只在移动端出现（桌面是抽卡立绘，卡片里没有它的位置） */
-.avatar-name {
-  display: none;
-}
-
-.avatar-card:hover {
-  border-color: var(--clr-white-30);
-}
-
-.avatar-card:hover .avatar-art {
-  transform: scale(1);
-}
-
 /* ========== 窄屏（移动设备）适配：60vw 的固定栏宽在手机上只剩两百多像素 ========== */
 @media (max-width: 768px) {
   #avatar-list-view {
@@ -339,68 +260,6 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
 
   .list-area {
     padding-bottom: 60px;
-  }
-
-  /* 一行三张卡片左右 */
-  .avatar-grid {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-    gap: 10px;
-  }
-
-  /* 卡面：米白底 + 品质底图 + Forward，右下角统一圆角 */
-  .avatar-card {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    border-color: transparent;
-    border-radius: 12px;
-    background-color: #f6f0e5;
-  }
-
-  /* 上半部分：品质底图垫底、Forward 压在上面，两层圆角由容器裁切 */
-  .avatar-figure {
-    position: relative;
-    flex: none;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    border-bottom-right-radius: 20px;
-  }
-
-  .avatar-quality {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .avatar-media {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .avatar-art {
-    object-fit: contain;
-    object-position: center bottom;
-    transform: none;
-  }
-
-  /* 名字条：米白底配深色字，过长时省略号截断 */
-  .avatar-name {
-    display: block;
-    padding: 6px 6px 8px;
-    overflow: hidden;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    color: #2b2b2b;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 </style>

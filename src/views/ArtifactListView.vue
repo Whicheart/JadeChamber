@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
+import MediaCard from '@/components/MediaCard.vue'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
 
@@ -108,29 +109,16 @@ onMounted(fetchArtifacts)
 
       <LoadState v-else-if="!filteredList.length" empty-text="没有找到匹配的圣遗物套装" />
 
-      <div v-else class="artifact-grid">
-        <button
+      <div v-else class="media-grid">
+        <MediaCard
           v-for="set in filteredList"
           :key="set.setId"
-          type="button"
-          class="artifact-card"
-          :aria-label="set.name"
+          :name="set.name"
+          :label="`${set.name}（${set.maxRankLevel}★ 圣遗物套装）`"
+          placeholder="图标待补充"
+          ratio="1 / 1"
           @click="$router.push(`/artifact/${set.setId}`)"
-        >
-          <!-- 圣遗物图标素材尚未入库，统一用占位框，等素材补齐后换成 <img> -->
-          <span class="artifact-art">
-            <span class="artifact-art-text">图标待补充</span>
-          </span>
-
-          <span class="artifact-info">
-            <span class="artifact-name">{{ set.name }}</span>
-            <span class="artifact-meta">
-              <span class="artifact-stars" :style="{ color: STAR_COLOR[set.maxRankLevel] || '' }">
-                {{ '★'.repeat(set.maxRankLevel || 0) }}
-              </span>
-            </span>
-          </span>
-        </button>
+        />
       </div>
     </div>
   </div>
@@ -162,76 +150,7 @@ onMounted(fetchArtifacts)
   display: none;
 }
 
-.artifact-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
-}
-
-.artifact-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  height: 260px;
-  padding: 12px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
-  cursor: pointer;
-  overflow: hidden;
-  transition: 200ms;
-}
-
-.artifact-card:hover {
-  border-color: var(--clr-white-30);
-  background-color: var(--clr-black-90);
-}
-
-/* 图标占位框：与角色/武器板块的 icon-placeholder 同一套虚线框 */
-.artifact-art {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--clr-white-20);
-  border-radius: 12px;
-  background-color: var(--clr-white-10);
-}
-
-.artifact-art-text {
-  color: var(--clr-white-40);
-  font-size: 13px;
-  letter-spacing: 1px;
-}
-
-.artifact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 4px 2px;
-  text-align: left;
-}
-
-.artifact-name {
-  color: var(--clr-white);
-  font-size: 16px;
-  letter-spacing: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.artifact-meta {
-  display: flex;
-  align-items: center;
-  color: var(--clr-white-50);
-  font-size: 13px;
-}
-
-.artifact-stars {
-  letter-spacing: 1px;
-}
+/* 卡片与网格由 components/MediaCard.vue + css/media-grid.css 统一提供 */
 
 /* ========== 窄屏（移动设备）适配 ========== */
 @media (max-width: 768px) {
@@ -244,36 +163,6 @@ onMounted(fetchArtifacts)
 
   .list-area {
     padding-bottom: 60px;
-  }
-
-  /* 一行两张卡片，卡片等比压到 200px */
-  .artifact-grid {
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-    gap: 10px;
-  }
-
-  .artifact-card {
-    height: 200px;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 12px;
-  }
-
-  .artifact-art {
-    border-radius: 10px;
-  }
-
-  .artifact-art-text {
-    font-size: 11px;
-  }
-
-  .artifact-name {
-    font-size: 14px;
-    letter-spacing: 0;
-  }
-
-  .artifact-meta {
-    font-size: 12px;
   }
 }
 </style>
