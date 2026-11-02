@@ -10,15 +10,31 @@ export function avatarIcon(fileName) {
   return new URL(`../assets/img/avatar/${avatarName}/${fileName}.webp`, import.meta.url).href
 }
 
-// 武器图片
-export function weaponGacha(name) {
-  return new URL(`../assets/weapon/${name}/gacha.webp`, import.meta.url).href
+// 武器图片：接口给的是完整文件名，如 UI_EquipIcon_Bow_Alkonost_Gacha
+// 目录取文件名里的英文名（Bow_Alkonost_Gacha → Alkonost），与角色图同一套「从文件名反推目录」的思路
+function weaponDir(fileName) {
+  if (!fileName) return ''
+
+  return String(fileName).replace('UI_EquipIcon_', '').split('_')[1] ?? ''
 }
-export function weaponIcon(name) {
-  return new URL(`../assets/weapon/${name}/icon.webp`, import.meta.url).href
+
+function weaponUrl(fileName) {
+  if (!fileName) return ''
+
+  return new URL(`../assets/img/weapon/${weaponDir(fileName)}/${fileName}.webp`, import.meta.url)
+    .href
 }
-export function weaponAwaken(name) {
-  return new URL(`../assets/weapon/${name}/awaken.webp`, import.meta.url).href
+
+export function weaponGacha(fileName) {
+  return weaponUrl(fileName)
+}
+
+export function weaponIcon(fileName) {
+  return weaponUrl(fileName)
+}
+
+export function weaponAwaken(fileName) {
+  return weaponUrl(fileName)
 }
 
 // 过滤器

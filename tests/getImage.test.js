@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { avatarIcon, filter, quality } from '../src/utils/getImage.js'
+import { avatarIcon, filter, quality, weaponGacha } from '../src/utils/getImage.js'
 
 test('avatarIcon：按文件名里的角色目录拼出图片地址', () => {
   assert.ok(
@@ -33,4 +33,16 @@ test('filter：拼出筛选器图标地址', () => {
 test('quality：拼出品质底图地址（文件名就是接口里的 qualityType）', () => {
   assert.ok(quality('QUALITY_ORANGE').endsWith('/assets/img/quality/QUALITY_ORANGE.webp'))
   assert.ok(quality('QUALITY_ORANGE_SP').endsWith('/quality/QUALITY_ORANGE_SP.webp'))
+})
+
+test('weaponGacha：按文件名里的英文目录拼出武器立绘地址', () => {
+  assert.ok(
+    weaponGacha('UI_EquipIcon_Bow_Alkonost_Gacha').endsWith(
+      '/assets/img/weapon/Alkonost/UI_EquipIcon_Bow_Alkonost_Gacha.webp',
+    ),
+  )
+  // 类型段不是目录名，目录取类型之后的英文名
+  assert.ok(weaponGacha('UI_EquipIcon_Sword_Amenoma_Gacha').includes('/weapon/Amenoma/'))
+  assert.equal(weaponGacha(''), '')
+  assert.equal(weaponGacha(null), '')
 })
