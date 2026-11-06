@@ -4,7 +4,7 @@ import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
 import MediaCard from '@/components/MediaCard.vue'
-import * as getImage from '@/utils/getImage'
+import { asset } from '@/utils/getImage'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
 import { WEAPON_TYPES, weaponLabel } from '@/utils/weapon'
@@ -18,7 +18,7 @@ const STAR_COLOR = {
   1: 'rgb(170, 170, 170)',
 }
 
-// 星级 → 品质底图：与角色卡共用 src/assets/img/quality 那 6 张图
+// 星级 → 品质底图：与角色卡共用 UI_QualityBg 那 6 张图
 const QUALITY_BY_RANK = {
   5: 'QUALITY_ORANGE',
   4: 'QUALITY_PURPLE',
@@ -27,17 +27,12 @@ const QUALITY_BY_RANK = {
   1: 'QUALITY_GRAY',
 }
 
-const qualityArt = (weapon) => getImage.quality(QUALITY_BY_RANK[weapon?.rank] ?? 'QUALITY_GRAY')
+const qualityArt = (weapon) => asset(QUALITY_BY_RANK[weapon?.rank] ?? 'QUALITY_GRAY')
 
-// 桌面端用抽卡立绘，移动端用无后缀的武器图标（UI_EquipIcon_…_Gacha → UI_EquipIcon_…），
-// 后者是 256 × 256 的方形线稿，正好配移动端 1 : 1 的卡面
-const gachaArt = (weapon) =>
-  weapon.GachaIconName ? getImage.weaponGacha(weapon.GachaIconName) : ''
+// 桌面端用抽卡立绘（GachaCardName，512×1024），移动端用无后缀的方形图标（iconName，256×256）
+const gachaArt = (weapon) => (weapon.GachaCardName ? asset(weapon.GachaCardName) : '')
 
-const iconArt = (weapon) =>
-  weapon.GachaIconName
-    ? getImage.weaponIcon(String(weapon.GachaIconName).replace(/_Gacha$/, ''))
-    : ''
+const iconArt = (weapon) => (weapon.iconName ? asset(weapon.iconName) : '')
 
 // 武器类型：接口给的是 WEAPON_XXX 代码，图标复用筛选器素材
 const WEAPON_TYPE_OPTIONS = WEAPON_TYPES.map((type) => ({
@@ -47,7 +42,7 @@ const WEAPON_TYPE_OPTIONS = WEAPON_TYPES.map((type) => ({
 }))
 
 // 筛选条件配置表（星级、武器类型两组，通过 active 标记是否选中）
-// 装备品质只有 4 星/5 星的图标素材，星级这一组统一用文字按钮，避免几种表示混在一行
+// 星级用提瓦特数字素材（UI_TeyvatNumIcon_*），类型用线稿图标
 const filter = ref([
   {
     id: 1,
@@ -55,6 +50,7 @@ const filter = ref([
     buttons: [5, 4, 3, 2, 1].map((star) => ({
       id: 10 + star,
       content: star,
+      iconName: `UI_TeyvatNumIcon_${star}`,
       label: `${star}★`,
       color: STAR_COLOR[star],
       active: false,

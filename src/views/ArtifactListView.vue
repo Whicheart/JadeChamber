@@ -4,6 +4,7 @@ import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
 import MediaCard from '@/components/MediaCard.vue'
+import { asset } from '@/utils/getImage'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
 
@@ -113,6 +114,7 @@ onMounted(fetchArtifacts)
         <MediaCard
           v-for="set in filteredList"
           :key="set.setId"
+          :image="asset(set.setIconName)"
           :name="set.name"
           :label="`${set.name}（${set.maxRankLevel}★ 圣遗物套装）`"
           placeholder="图标待补充"

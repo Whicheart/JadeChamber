@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { asset } from '@/utils/getImage'
 import request from '@/utils/request'
 import LoadState from '@/components/LoadState.vue'
 import ReliquaryPropRank from '@/components/ReliquaryPropRank.vue'
@@ -10,6 +11,27 @@ const route = useRoute()
 const artifactSet = ref({})
 const loading = ref(true)
 const failed = ref(false)
+
+// 加载失败的图源记下来（15004、15012 两套缺图标），下次渲染直接退回占位
+const brokenArt = reactive(new Set())
+
+const setIcon = computed(() => {
+  const iconName = String(artifactSet.value.setIconName || '')
+
+  return iconName && !brokenArt.has(iconName) ? asset(iconName) : ''
+})
+
+function pieceIcon(piece) {
+  const iconName = String(piece?.iconName || '')
+
+  return iconName && !brokenArt.has(iconName) ? asset(iconName) : ''
+}
+
+function onArtError(event) {
+  const src = String(event?.target?.src || '')
+  const iconName = src.split('/').pop()?.replace('.webp', '')
+  if (iconName) brokenArt.add(iconName)
+}
 
 // 当前选中的部件，默认第一个
 const selectedId = ref(null)
@@ -194,9 +216,17 @@ watch(
     <template v-else>
       <!-- ================= A 块：套装图标 + 名称/星级/套装效果 ================= -->
       <section class="panel panel-a">
-        <!-- 圣遗物图标素材尚未入库，先用占位框；宽高严格 1:1 -->
-        <div class="art-box">
-          <span class="art-text">图标待补充</span>
+        <!-- 套装图标：宽高严格 1:1，缺图时退回占位框 -->
+        <div class="art-box" :class="{ 'is-placeholder': !setIcon }">
+          <img
+            v-if="setIcon"
+            class="art-img"
+            :src="setIcon"
+            :alt="artifactSet.name + ' 套装图标'"
+            loading="lazy"
+            @error="onArtError"
+          />
+          <span v-else class="art-text">图标待补充</span>
         </div>
 
         <div class="info-box">
@@ -227,8 +257,16 @@ watch(
             :aria-pressed="piece.id === selectedId"
             @click="selectedId = piece.id"
           >
-            <!-- 部件图标素材尚未入库，同样用占位框 -->
-            <span class="piece-item-icon">图标</span>
+            <!-- 部件图标：缺图时退回占位框 -->
+            <img
+              v-if="pieceIcon(piece)"
+              class="piece-item-icon"
+              :src="pieceIcon(piece)"
+              :alt="piece.name + ' 图标'"
+              loading="lazy"
+              @error="onArtError"
+            />
+            <span v-else class="piece-item-icon piece-item-icon-placeholder">图标</span>
 
             <span class="piece-item-body">
               <span class="piece-item-name">{{ piece.name }}</span>
@@ -329,9 +367,20 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--clr-white-20);
   border-radius: 16px;
+  overflow: hidden;
+}
+
+/* 只有缺图时才画虚线占位框 */
+.art-box.is-placeholder {
+  border: 1px dashed var(--clr-white-20);
   background-color: var(--clr-white-10);
+}
+
+.art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .art-text {
@@ -439,16 +488,20 @@ watch(
   background-color: var(--clr-white-20);
 }
 
-/* 部件图标占位框 */
+/* 部件图标：有图时撑满 60×60，缺图时才显示虚线占位框 */
 .piece-item-icon {
   flex: none;
   width: 60px;
   height: 60px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.piece-item-icon-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px dashed var(--clr-white-20);
-  border-radius: 10px;
   background-color: var(--clr-white-10);
   color: var(--clr-white-40);
   font-size: 11px;

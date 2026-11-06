@@ -3,7 +3,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/utils/request'
 import * as format from '@/utils/format'
-import * as getImage from '@/utils/getImage'
+import { asset, materialIcon } from '@/utils/getImage'
 import { descHtml } from '@/utils/richText'
 import {
   mergeMaterials,
@@ -33,14 +33,17 @@ const AWAKEN_LEVEL = 40
 // 加载失败的图源记下来，下次计算时跳过（少数低星武器没有 Awaken 素材）
 const brokenArt = reactive(new Set())
 
+// 摩拉没有对应的 costItem，固定用 202 号图标（UI_ItemIcon_202 就是那枚金币）
+const MORA_ICON = 'UI_ItemIcon_202'
+
 const artUrl = computed(() => {
-  // base-info 的 icon 形如 UI_EquipIcon_Bow_Alkonost，awakenIcon 只是多了 _Awaken 后缀
+  // base-info 的 icon 形如 UI_EquipIcon_Bow_Alkonost，awakenIcon 是配套的 _Awaken 版
   const baseName = String(weapon.value.icon || '').replace(/_Awaken$/, '')
   if (!baseName) return ''
 
   const names = level.value >= AWAKEN_LEVEL ? [`${baseName}_Awaken`, baseName] : [baseName]
 
-  return names.map((name) => getImage.weaponIcon(name)).find((url) => !brokenArt.has(url)) || ''
+  return names.map((name) => asset(name)).find((url) => !brokenArt.has(url)) || ''
 })
 
 function onArtError(event) {
@@ -222,11 +225,19 @@ watch(
 
         <div v-if="materialSummary.length || totalMora" class="material-rows">
           <div v-for="item in materialSummary" :key="item.id" class="material-row">
-            <span>{{ item.name }}</span>
+            <img
+              v-if="materialIcon(item)"
+              class="material-icon"
+              :src="materialIcon(item)"
+              :alt="item.name"
+              loading="lazy"
+            />
+            <span class="material-name">{{ item.name }}</span>
             <span class="count">×{{ item.count }}</span>
           </div>
           <div class="material-row mora">
-            <span>摩拉</span>
+            <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
+            <span class="material-name">摩拉</span>
             <span class="count">×{{ totalMora }}</span>
           </div>
         </div>
@@ -460,11 +471,29 @@ watch(
 
 .material-row {
   display: flex;
+  align-items: center;
+  gap: 8px;
   justify-content: space-between;
   padding: 8px 14px;
   border-radius: 8px;
   background-color: var(--clr-white-10);
   font-size: 15px;
+}
+
+.material-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* 名字过长时省略，数量始终贴右侧 */
+.material-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .material-row.mora {

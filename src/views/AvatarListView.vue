@@ -4,29 +4,13 @@ import FilterBar from '@/components/FilterBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import LoadState from '@/components/LoadState.vue'
 import MediaCard from '@/components/MediaCard.vue'
-import * as getImage from '@/utils/getImage'
+import { ELEMENT_TYPES, elementFilterIcon } from '@/utils/element'
+import { asset } from '@/utils/getImage'
 import request from '@/utils/request'
 import { useScrollMemory } from '@/utils/useScrollMemory'
 import { WEAPON_TYPES } from '@/utils/weapon'
 
-// 移动端卡片改用正面头像（Forward）：Gacha 是 1:3.2 的抽卡立绘，塞进手机窄卡会被裁成一条
-const forwardArt = (avatar) =>
-  getImage.avatarIcon(String(avatar?.GachaIconName || '').replace(/_Gacha$/, '_Forward'))
-
-// 元素与品质对应的主题色，筛选按钮激活时用它做高亮
-const elementColor = {
-  GEO: 'rgb(251, 203, 105)',
-  DENDRO: 'rgb(8, 228, 92)',
-  ELECTRO: 'rgb(219, 147, 255)',
-  PYRO: 'rgb(251, 155, 6)',
-  HYDRO: 'rgb(53, 197, 249)',
-  CRYO: 'rgb(140, 242, 254)',
-  ANEMO: 'rgb(103, 253, 208)',
-  QUALITY_PURPLE: 'rgb(180, 150, 240)',
-  QUALITY_ORANGE: 'rgb(255, 180, 65)',
-}
-
-// 品质底图：接口的 qualityType 与 src/assets/img/quality 下的文件名一一对应，未知品质退到灰底
+// 品质底图：接口的 qualityType 与 UI_QualityBg 下的文件名一一对应，未知品质退到灰底
 const QUALITY_BACKGROUNDS = new Set([
   'QUALITY_BLUE',
   'QUALITY_GRAY',
@@ -39,7 +23,13 @@ const QUALITY_BACKGROUNDS = new Set([
 const qualityArt = (avatar) => {
   const quality = String(avatar?.qualityType || '')
 
-  return getImage.quality(QUALITY_BACKGROUNDS.has(quality) ? quality : 'QUALITY_GRAY')
+  return asset(QUALITY_BACKGROUNDS.has(quality) ? quality : 'QUALITY_GRAY')
+}
+
+// 星级筛选没有线稿图标，用提瓦特数字素材（UI_TeyvatNumIcon_*），四星紫、五星金
+const STAR_COLORS = {
+  QUALITY_PURPLE: 'rgb(180, 150, 240)',
+  QUALITY_ORANGE: 'rgb(255, 180, 65)',
 }
 
 // 筛选条件配置表（星级、元素、武器三组，通过 active 标记是否选中）
@@ -48,71 +38,27 @@ const filter = ref([
   {
     id: 1,
     title: '星级',
-    buttons: [
-      {
-        id: 11,
-        content: 'QUALITY_PURPLE',
-        iconName: 'Quality_Purple',
-        color: elementColor.QUALITY_PURPLE,
-        active: false,
-      },
-      {
-        id: 12,
-        content: 'QUALITY_ORANGE',
-        iconName: 'Quality_Orange',
-        color: elementColor.QUALITY_ORANGE,
-        active: false,
-      },
-    ],
+    buttons: ['QUALITY_PURPLE', 'QUALITY_ORANGE'].map((quality, index) => ({
+      id: 11 + index,
+      content: quality,
+      iconName: `UI_TeyvatNumIcon_${index + 4}`,
+      label: `${index + 4}★`,
+      color: STAR_COLORS[quality],
+      active: false,
+    })),
   },
   {
     id: 2,
     title: '元素类型',
-    buttons: [
-      {
-        id: 21,
-        content: 'PYRO',
-        iconName: 'Element_Pyro',
-        color: elementColor.PYRO,
-        active: false,
-      },
-      {
-        id: 22,
-        content: 'HYDRO',
-        iconName: 'Element_Hydro',
-        color: elementColor.HYDRO,
-        active: false,
-      },
-      {
-        id: 23,
-        content: 'ANEMO',
-        iconName: 'Element_Anemo',
-        color: elementColor.ANEMO,
-        active: false,
-      },
-      {
-        id: 24,
-        content: 'ELECTRO',
-        iconName: 'Element_Electro',
-        color: elementColor.ELECTRO,
-        active: false,
-      },
-      {
-        id: 25,
-        content: 'DENDRO',
-        iconName: 'Element_Dendro',
-        color: elementColor.DENDRO,
-        active: false,
-      },
-      {
-        id: 26,
-        content: 'CRYO',
-        iconName: 'Element_Cryo',
-        color: elementColor.CRYO,
-        active: false,
-      },
-      { id: 27, content: 'GEO', iconName: 'Element_Geo', color: elementColor.GEO, active: false },
-    ],
+    // content 就是 /api/avatar/list?elements= 接受的取值（Water / Fire / …）
+    buttons: ELEMENT_TYPES.map((type, index) => ({
+      id: 21 + index,
+      content: type.name,
+      iconName: elementFilterIcon(type.name),
+      label: type.label,
+      color: type.color,
+      active: false,
+    })),
   },
   {
     id: 3,
@@ -211,8 +157,8 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
         <MediaCard
           v-for="avatar in avatarList"
           :key="avatar.id"
-          :image="getImage.avatarIcon(avatar.GachaIconName)"
-          :mobile-image="forwardArt(avatar)"
+          :image="asset(avatar.GachaIconName)"
+          :mobile-image="asset(avatar.iconName)"
           :quality="qualityArt(avatar)"
           :name="avatar.name"
           ratio="1 / 2.5"

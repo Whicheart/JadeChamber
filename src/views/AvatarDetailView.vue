@@ -119,11 +119,7 @@ watch(
       </template>
 
       <template v-else-if="activeNavBtnId === 2">
-        <AvatarSkills
-          v-if="moduleState.skills === 'ok'"
-          :skills="avatarData.skills"
-          :weapon-type="avatarData.baseInfo.weaponType"
-        />
+        <AvatarSkills v-if="moduleState.skills === 'ok'" :skills="avatarData.skills" />
         <LoadState
           v-else
           :loading="moduleState.skills === 'loading'"
@@ -153,7 +149,7 @@ watch(
         <AvatarOutfits
           v-if="moduleState.outfits === 'ok'"
           :outfits="avatarData.outfits"
-          :splash-icon-name="avatarData.baseInfo.splashIconName"
+          :gacha-image-name="avatarData.baseInfo.gachaImageName"
         />
         <LoadState
           v-else
