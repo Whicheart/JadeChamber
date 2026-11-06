@@ -81,6 +81,8 @@ function mainDesc(item) {
   return extra && String(extra).trim() ? extra : item?.desc
 }
 
+const loreText = (item) => String(item?.loreDesc ?? '').trim()
+
 // ========== 数值行 ==========
 // 形如 "一段伤害|{param1:F1P}"，或 "2枚光幕攻击伤害|({param6:F1P}攻击力+{param7:F1P}元素精通)*2"。
 // 只把 {paramN:FMT} 换成数值，模板里其余字符（+ * / 单位文字）原样保留，不参与任何运算
@@ -165,6 +167,11 @@ const passiveSkills = computed(() => [
           <div class="passive-content">
             <div class="passive-name">{{ passive.name }}</div>
             <div class="passive-desc" v-html="descHtml(mainDesc(passive))"></div>
+            <p
+              v-if="loreText(passive)"
+              class="passive-desc"
+              v-html="descHtml(loreText(passive))"
+            ></p>
           </div>
         </div>
       </div>
