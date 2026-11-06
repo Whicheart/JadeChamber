@@ -1,7 +1,6 @@
 <script setup>
-import { computed, reactive, watch } from 'vue'
-import * as getImage from '@/utils/getImage'
-import { resolveFirstImage } from '@/utils/hasImage'
+import { computed, reactive } from 'vue'
+import { asset } from '@/utils/getImage'
 import { descHtml } from '@/utils/richText'
 
 const props = defineProps({
@@ -10,8 +9,8 @@ const props = defineProps({
     required: true,
     default: () => ({}),
   },
-  // 角色立绘文件名（base-info.splashIconName），用来定位 assets/img/avatar/<角色>/ 目录
-  splashIconName: {
+  // 角色本体立绘文件名（base-info.gachaImageName），默认装扮没有专属立绘时用它
+  gachaImageName: {
     type: String,
     default: '',
   },
@@ -21,62 +20,23 @@ const data = computed(() => props.outfits || {})
 const list = computed(() => data.value.outfits || [])
 
 // ========== 装扮立绘 ==========
-// 接口不给图片名，只能按目录约定拼：默认装扮 Splash，第 N 套装扮 Splash_N
-const dirName = computed(
-  () =>
-    String(props.splashIconName || '')
-      .replace('UI_AvatarIcon_', '')
-      .split('_')[0],
-)
+// 皮肤装扮自带 imageName（UI_Costume_*），整套素材里只有 4★ 皮肤有；
+// 默认装扮（indexID 为 null）没有 imageName，用角色本体立绘兜底
+const brokenArts = reactive(new Set())
 
-// 少数角色的立绘编号与装扮序号是错开的：第一套非默认时装没有独立立绘（固定占位），
-// 立绘从第二套非默认时装开始，且文件名序号等于装扮序号（普通角色要 +1）
-const FIRST_SKIN_WITHOUT_ART = new Set(['Qin', 'Mona', 'Rosaria', 'Ambor']) // 琴、莫娜、罗莎莉亚、安柏
+function artUrl(item) {
+  const imageName = String(item?.imageName || '')
+  if (imageName) return brokenArts.has(imageName) ? '' : asset(imageName)
 
-function splashCandidates(item) {
-  const dir = dirName.value
-  if (!dir) return []
+  if (item?.indexID == null) return asset(props.gachaImageName)
 
-  const base = `UI_AvatarIcon_${dir}_Splash`
-  const index = item?.indexID == null ? 0 : Number(item.indexID)
-
-  // 默认装扮：立绘就是角色本体那张
-  if (!index) return [getImage.avatarIcon(base)]
-
-  // 错位角色：第一套非默认时装固定无立绘，之后立绘序号与装扮序号对齐
-  if (FIRST_SKIN_WITHOUT_ART.has(dir)) {
-    return index === 1 ? [] : [getImage.avatarIcon(`${base}_${index}`)]
-  }
-
-  // 普通角色：第 N 套装扮用 Splash_(N+1)，个别角色第二套存成了 Splash_0
-  return [`${base}_${index + 1}`, `${base}_0`].map((name) => getImage.avatarIcon(name))
+  return ''
 }
 
-// 每套立绘的探测结果：loading 探测中 / ok 有图 / missing 无图
-const artState = reactive({})
-
-function artOf(item) {
-  return artState[item.id] || { status: 'loading', url: '' }
-}
-
-// 缺图时 vite 会拿 SPA 回退页冒充资源（200 + text/html），hasImage 只认真正的图片响应，
-// 否则 <img> 会把整页 HTML 当图解码失败，露出一张破图 + alt 文本
-// 按候选顺序逐张探测，第一张真实存在的图片胜出；全都没有就落到占位框
-async function resolveArt(item) {
-  artState[item.id] = await resolveFirstImage(splashCandidates(item))
-}
-
-watch(
-  list,
-  (items) => {
-    items.forEach((item) => resolveArt(item))
-  },
-  { immediate: true },
-)
-
-// 兜底：探测通过但浏览器仍加载失败时，直接退回占位框
+// 兜底：字段有值但浏览器加载失败时退回占位框
 function onSplashError(item) {
-  artState[item.id] = { status: 'missing', url: '' }
+  const imageName = String(item?.imageName || '')
+  if (imageName) brokenArts.add(imageName)
 }
 
 // 品质：4 → 四星，5 → 五星，缺省不显示
@@ -88,16 +48,14 @@ const qualityText = (quality) => QUALITY_MAP[quality] || ''
   <div id="avatar-outfits">
     <section v-for="item in list" :key="item.id" class="panel">
       <img
-        v-if="artOf(item).status === 'ok'"
+        v-if="artUrl(item)"
         class="splash"
-        :src="artOf(item).url"
+        :src="artUrl(item)"
         :alt="item.name + ' 装扮立绘'"
         loading="lazy"
         @error="onSplashError(item)"
       />
-      <div v-else class="splash splash-placeholder">
-        {{ artOf(item).status === 'missing' ? '该时装无立绘' : '' }}
-      </div>
+      <div v-else class="splash splash-placeholder">该时装无立绘</div>
 
       <div class="card-head">
         <h2 class="panel-title">{{ item.name }}</h2>

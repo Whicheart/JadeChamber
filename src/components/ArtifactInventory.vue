@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import initialRelics from '@/assets/testJson/artiTest.json'
+import { asset } from '@/utils/getImage'
 import request from '@/utils/request'
 import { propLabel, propText, slotOfRelic } from '@/utils/reliquaryProp'
 import ArtifactEditor from '@/components/ArtifactEditor.vue'
@@ -75,6 +76,15 @@ function slotOf(relic) {
   return slotOfRelic(relic?.relicId)
 }
 
+// 测试数据里只有 relicId，没有 iconName：套装图标名固定是 UI_RelicIcon_<setId>_<部位位>，
+// 部位位就是 relicId 的第四位（48442 → 4 生之花、48422 → 2 死之羽 …）
+function relicIconName(relic) {
+  const setId = relic?.setId
+  const digit = String(relic?.relicId || '')[3]
+
+  return setId && digit ? `UI_RelicIcon_${setId}_${digit}` : ''
+}
+
 // 后端把新增后的全量数组返回过来，直接替换内存里的列表
 function onCreated(list) {
   if (Array.isArray(list) && list.length) relics.value = list
@@ -110,7 +120,14 @@ function onCreated(list) {
           @keydown.space.prevent="selectable && emit('select', relic)"
         >
           <div class="relic-head">
-            <span class="relic-icon" aria-hidden="true"></span>
+            <img
+              v-if="relicIconName(relic)"
+              class="relic-icon"
+              :src="asset(relicIconName(relic))"
+              :alt="slotOf(relic)"
+              loading="lazy"
+            />
+            <span v-else class="relic-icon relic-icon-placeholder" aria-hidden="true"></span>
             <div class="relic-title">
               <span class="relic-name">{{ setNameOf(relic) }}</span>
               <span class="relic-meta">Lv.{{ relic.level }} · {{ slotOf(relic) }}</span>
@@ -238,13 +255,17 @@ function onCreated(list) {
   gap: 10px;
 }
 
-/* 圣遗物图标素材尚未入库，先用 1:1 占位框 */
+/* 圣遗物图标：有图时 1:1 撑满，缺图才显示虚线占位框 */
 .relic-icon {
   flex: none;
   width: 56px;
   height: 56px;
-  border: 1px dashed var(--clr-white-20);
   border-radius: 10px;
+  object-fit: contain;
+}
+
+.relic-icon-placeholder {
+  border: 1px dashed var(--clr-white-20);
   background-color: var(--clr-white-10);
 }
 

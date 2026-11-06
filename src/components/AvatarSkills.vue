@@ -1,10 +1,8 @@
 <script setup>
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive } from 'vue'
 import * as format from '@/utils/format'
-import * as getImage from '@/utils/getImage'
-import { resolveFirstImage } from '@/utils/hasImage'
+import { asset } from '@/utils/getImage'
 import { descHtml } from '@/utils/richText'
-import { weaponFilterIcon } from '@/utils/weapon'
 import SliderRow from '@/components/SliderRow.vue'
 
 const props = defineProps({
@@ -13,18 +11,13 @@ const props = defineProps({
     required: true,
     default: () => ({}),
   },
-  // 角色武器类型（如「单手剑」），来自 base-info，用于普通攻击图标
-  weaponType: {
-    type: String,
-    default: '',
-  },
 })
 
 const data = computed(() => props.skills || {})
 
 // ========== 技能分类 ==========
-// 归属看 skillIconName：新命名 Talent_NormalAttack / Talent_ElementSkill / Talent_ElementBurst，
-// 旧命名 Skill_A / Skill_S / Skill_E（旧命名没有对应素材）
+// 归属看 iconName：主动技能是 Skill_A / Skill_S / Skill_E + 角色名，
+// 少数旧数据仍带 Talent_* 后缀，两套都认
 const SKILL_TYPES = [
   { patterns: ['Skill_A', 'Talent_NormalAttack'], label: '普通攻击' },
   { patterns: ['Skill_S', 'Talent_ElementSkill'], label: '元素战技' },
@@ -32,7 +25,7 @@ const SKILL_TYPES = [
 ]
 
 function typeOrder(skill) {
-  const icon = String(skill?.skillIconName || skill?.icon || '')
+  const icon = String(skill?.iconName || '')
   const index = SKILL_TYPES.findIndex((item) =>
     item.patterns.some((pattern) => icon.includes(pattern)),
   )
@@ -45,48 +38,19 @@ const combatSkills = computed(() =>
 )
 
 // ========== 技能图标 ==========
-// 接口给的是资源文件名（如 UI_AvatarIcon_Ayaka_Talent_ElementSkill），目录规则与角色头像一致；
-// 旧命名（如 Skill_S_Ayaka_02）没有对应素材，只能继续占位。
-// 普通攻击若没有专属素材，退回角色武器类型的过滤器图标。
-const normalAttackIconUrl = computed(() => {
-  const iconName = weaponFilterIcon(props.weaponType)
-  return iconName ? getImage.filter(iconName) : ''
-})
+// 接口直接给出资源文件名（Skill_A_01 / UI_Talent_S_Ayaka_05），交给 asset() 解析。
+// 只有 iconName 为空（个别角色「暂缺」）或加载失败时才落占位框。
+const brokenIcons = reactive(new Set())
 
-// 素材按需陆续补充，缺失是常态：先探测文件是否真是图片，再决定渲染图标还是占位框。
-// 优先级：专属技能图标 → 普攻的武器类型图标 → 占位框
-const iconState = reactive({})
-const pendingIcons = new Set()
-
-function iconCandidates(skill) {
-  const urlList = []
-  const iconName = String(skill?.skillIconName || '')
-
-  if (iconName.startsWith('UI_AvatarIcon_')) urlList.push(getImage.avatarIcon(iconName))
-  if (typeOrder(skill) === 0 && normalAttackIconUrl.value) urlList.push(normalAttackIconUrl.value)
-
-  return urlList
+function onIconError(iconName) {
+  if (iconName) brokenIcons.add(iconName)
 }
 
-async function resolveSkillIcon(skill) {
-  const id = skill?.id
-  if (!id || pendingIcons.has(id)) return
+function iconUrl(iconName) {
+  const name = String(iconName || '')
 
-  pendingIcons.add(id)
-  iconState[id] = await resolveFirstImage(iconCandidates(skill))
-  pendingIcons.delete(id)
+  return name && !brokenIcons.has(name) ? asset(name) : ''
 }
-
-// loading 期间先渲染空占位框，避免图标与占位框来回闪
-function skillIcon(skill) {
-  return iconState[skill?.id] || { status: 'loading', url: '' }
-}
-
-function onSkillIconError(skill) {
-  iconState[skill.id] = { status: 'missing', url: '' }
-}
-
-watch(combatSkills, (list) => list.forEach(resolveSkillIcon), { immediate: true })
 
 // ========== 技能等级 ==========
 // 每个技能单独记一个等级，默认 10
@@ -137,20 +101,10 @@ function paramRows(skillData) {
 
 // ========== 固有天赋 ==========
 // 普通被动在前，特殊固有天赋（specialProudSkills）追加在后，同块展示
-// 接口给出资源文件名（如 UI_AvatarIcon_Ayaka_Passive_1），目录规则与角色头像一致
-const brokenIcons = reactive(new Set())
-
-function onIconError(iconName) {
-  brokenIcons.add(iconName)
-}
-
-const passiveSkills = computed(() =>
-  [...(data.value.passiveSkills || []), ...(data.value.specialProudSkills || [])].map((item) => {
-    const iconName = item?.skillIconName
-    const missing = !iconName || brokenIcons.has(iconName)
-    return { ...item, iconUrl: missing ? '' : getImage.avatarIcon(iconName) }
-  }),
-)
+const passiveSkills = computed(() => [
+  ...(data.value.passiveSkills || []),
+  ...(data.value.specialProudSkills || []),
+])
 </script>
 
 <template>
@@ -159,16 +113,14 @@ const passiveSkills = computed(() =>
     <section v-for="skill in combatSkills" :key="skill.id" class="panel">
       <div class="panel-head">
         <img
-          v-if="skillIcon(skill).status === 'ok'"
+          v-if="iconUrl(skill.iconName)"
           class="skill-icon"
-          :src="skillIcon(skill).url"
+          :src="iconUrl(skill.iconName)"
           :alt="skill.name + ' 图标'"
           loading="lazy"
-          @error="onSkillIconError(skill)"
+          @error="onIconError(skill.iconName)"
         />
-        <div v-else class="skill-icon icon-placeholder">
-          {{ skillIcon(skill).status === 'missing' ? '图标' : '' }}
-        </div>
+        <div v-else class="skill-icon icon-placeholder">图标</div>
         <div class="panel-head-text">
           <h2 class="panel-title">{{ skill.name }}</h2>
         </div>
@@ -202,12 +154,12 @@ const passiveSkills = computed(() =>
           class="passive-item"
         >
           <img
-            v-if="passive.iconUrl"
+            v-if="iconUrl(passive.iconName)"
             class="skill-icon"
-            :src="passive.iconUrl"
+            :src="iconUrl(passive.iconName)"
             :alt="passive.name + ' 天赋图标'"
             loading="lazy"
-            @error="onIconError(passive.skillIconName)"
+            @error="onIconError(passive.iconName)"
           />
           <div v-else class="skill-icon icon-placeholder">图标</div>
           <div class="passive-content">

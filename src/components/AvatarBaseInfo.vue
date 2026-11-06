@@ -1,10 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
-import * as getImage from '@/utils/getImage'
+import { elementCommonIcon } from '@/utils/element'
 import * as format from '@/utils/format'
+import { asset, materialIcon } from '@/utils/getImage'
 import { mergeMaterials, moraTotal, reachedStages, valueAt } from '@/utils/growth'
 import { weaponFilterIcon } from '@/utils/weapon'
 import SliderRow from '@/components/SliderRow.vue'
+
+// 摩拉没有对应的 costItem，固定用 202 号图标（UI_ItemIcon_202 就是那枚金币）
+const MORA_ICON = 'UI_ItemIcon_202'
 
 const props = defineProps({
   baseInfo: {
@@ -23,7 +27,7 @@ function pick(befor, after) {
 const info = computed(() => props.baseInfo || {})
 
 // ========== A 块：基础信息 ==========
-const splashUrl = computed(() => getImage.avatarIcon(info.value.splashIconName))
+const splashUrl = computed(() => asset(info.value.gachaImageName))
 
 const name = computed(() => info.value.name || '未知角色')
 const title = computed(() => info.value.title || '')
@@ -39,23 +43,14 @@ const starCount = computed(() => {
 const weaponText = computed(() => info.value.weaponType || '')
 const weaponIcon = computed(() => {
   const iconName = weaponFilterIcon(weaponText.value)
-  return iconName ? getImage.filter(iconName) : ''
+  return iconName ? asset(iconName) : ''
 })
 
-// 元素：after 优先
+// 元素：after 优先；接口给的是中文（冰/水/火/雷/风/岩/草），详情页用彩色圆形图标
 const elementText = computed(() => pick(info.value.element?.befor, info.value.element?.after))
-const ELEMENT_ICON_MAP = [
-  ['冰', 'Element_Cryo'],
-  ['水', 'Element_Hydro'],
-  ['火', 'Element_Pyro'],
-  ['雷', 'Element_Electro'],
-  ['风', 'Element_Anemo'],
-  ['岩', 'Element_Geo'],
-  ['草', 'Element_Dendro'],
-]
 const elementIcon = computed(() => {
-  const hit = ELEMENT_ICON_MAP.find(([key]) => elementText.value.includes(key))
-  return hit ? getImage.filter(hit[1]) : ''
+  const iconName = elementCommonIcon(elementText.value)
+  return iconName ? asset(iconName) : ''
 })
 
 const releaseDate = computed(() => {
@@ -81,7 +76,8 @@ const birthdayText = computed(() => {
 const constellationText = computed(
   () => pick(info.value.constellation?.befor, info.value.constellation?.after) || '—',
 )
-const powerText = computed(() => pick(info.value.power?.befor, info.value.power?.after) || '—')
+// 神之眼：接口字段名是 vision（befor / after 两版）
+const visionText = computed(() => pick(info.value.vision?.befor, info.value.vision?.after) || '—')
 
 const cvList = computed(() => {
   const cv = info.value.cv || {}
@@ -201,7 +197,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
             <span class="value">{{ constellationText }}</span>
           </li>
           <li>
-            <span class="power">{{ powerText || '—' }}</span>
+            <span class="vision">{{ visionText }}</span>
             <span class="value">
               <img v-if="elementIcon" :src="elementIcon" class="mini-icon" alt="" />
               {{ elementText || '—' }}
@@ -252,11 +248,19 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
             <h3>突破材料 · {{ promoteStages.length }} 阶</h3>
             <div v-if="levelUpMaterials.items.length" class="material-rows">
               <div v-for="item in levelUpMaterials.items" :key="item.id" class="material-row">
-                <span>{{ item.name }}</span>
+                <img
+                  v-if="materialIcon(item)"
+                  class="material-icon"
+                  :src="materialIcon(item)"
+                  :alt="item.name"
+                  loading="lazy"
+                />
+                <span class="material-name">{{ item.name }}</span>
                 <span class="count">×{{ item.count }}</span>
               </div>
               <div class="material-row mora">
-                <span>摩拉</span>
+                <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
+                <span class="material-name">摩拉</span>
                 <span class="count">×{{ levelUpMaterials.mora }}</span>
               </div>
             </div>
@@ -267,11 +271,19 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
             <h3>天赋材料</h3>
             <div v-if="talentMaterials.items.length" class="material-rows">
               <div v-for="item in talentMaterials.items" :key="item.id" class="material-row">
-                <span>{{ item.name }}</span>
+                <img
+                  v-if="materialIcon(item)"
+                  class="material-icon"
+                  :src="materialIcon(item)"
+                  :alt="item.name"
+                  loading="lazy"
+                />
+                <span class="material-name">{{ item.name }}</span>
                 <span class="count">×{{ item.count }}</span>
               </div>
               <div class="material-row mora">
-                <span>摩拉</span>
+                <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
+                <span class="material-name">摩拉</span>
                 <span class="count">×{{ talentMaterials.mora }}</span>
               </div>
             </div>
@@ -400,7 +412,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   object-fit: contain;
 }
 
-.power {
+.vision {
   color: var(--clr-white-50);
   font-size: 14px;
 }
@@ -477,11 +489,29 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 
 .material-row {
   display: flex;
+  align-items: center;
+  gap: 8px;
   justify-content: space-between;
   padding: 8px 14px;
   border-radius: 8px;
   background-color: var(--clr-white-10);
   font-size: 15px;
+}
+
+.material-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* 名字过长时省略，数量始终贴右侧 */
+.material-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .material-row.mora {

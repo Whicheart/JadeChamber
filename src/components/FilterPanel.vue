@@ -1,5 +1,5 @@
 <script setup>
-import * as getImage from '@/utils/getImage'
+import { asset } from '@/utils/getImage'
 
 // 筛选面板：按分组渲染按钮
 // 有 iconName 的用筛选器图标（mask 着色），没有的当文字胶囊用
@@ -20,7 +20,7 @@ function buttonStyle(button) {
   const style = { '--active-color': button.color || 'var(--clr-white)' }
   if (!button.iconName) return style
 
-  const url = `url("${getImage.filter(button.iconName)}")`
+  const url = `url("${asset(button.iconName)}")`
   style.maskImage = url
   style.WebkitMaskImage = url
   return style
@@ -40,6 +40,9 @@ function buttonStyle(button) {
           class="filter-btn"
           :class="{ active: button.active, 'text-btn': !button.iconName }"
           :style="buttonStyle(button)"
+          :aria-label="button.label || undefined"
+          :aria-pressed="button.active"
+          :title="button.label || undefined"
           @click="$emit('toggle', group.id, button.id)"
         >
           {{ button.iconName ? '' : button.label }}

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive } from 'vue'
-import * as getImage from '@/utils/getImage'
+import { asset } from '@/utils/getImage'
 import { descHtml } from '@/utils/richText'
 
 const props = defineProps({
@@ -15,15 +15,14 @@ const data = computed(() => props.constellations || {})
 const list = computed(() => data.value.constellations || [])
 
 // ========== 命座图标 ==========
-// 接口直接给出资源文件名（如 UI_AvatarIcon_Ayaka_Constellation_1），
-// 目录规则与角色头像一致，复用 avatarIcon() 即可拼出路径
+// 接口直接给出资源文件名（如 UI_Talent_S_Ayaka_01），asset() 按前缀解析目录
 const brokenIcons = reactive(new Set())
 
 const rows = computed(() =>
   list.value.map((item) => {
-    const iconName = item?.constellationIconName
+    const iconName = item?.iconName
     const missing = !iconName || brokenIcons.has(item.id)
-    return { ...item, iconUrl: missing ? '' : getImage.avatarIcon(iconName) }
+    return { ...item, iconUrl: missing ? '' : asset(iconName) }
   }),
 )
 
