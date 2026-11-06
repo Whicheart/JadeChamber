@@ -1,48 +1,65 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { avatarIcon, filter, quality, weaponGacha } from '../src/utils/getImage.js'
+import { asset, materialIcon } from '../src/utils/getImage.js'
 
-test('avatarIcon：按文件名里的角色目录拼出图片地址', () => {
+test('asset：UI_ 前缀的两段名放进同名目录', () => {
   assert.ok(
-    avatarIcon('UI_AvatarIcon_Ayaka_Splash').endsWith(
-      '/assets/img/avatar/Ayaka/UI_AvatarIcon_Ayaka_Splash.webp',
+    asset('UI_AvatarIcon_Ayaka').endsWith('/assets/img/UI_AvatarIcon/UI_AvatarIcon_Ayaka.webp'),
+  )
+  assert.ok(
+    asset('UI_Gacha_AvatarImg_Ayaka').endsWith(
+      '/assets/img/UI_Gacha/UI_Gacha_AvatarImg_Ayaka.webp',
     ),
   )
   assert.ok(
-    avatarIcon('UI_AvatarIcon_Qin_Constellation_2').endsWith(
-      '/assets/img/avatar/Qin/UI_AvatarIcon_Qin_Constellation_2.webp',
+    asset('UI_Gacha_AvatarIcon_Vodyanitsa').endsWith(
+      '/img/UI_Gacha/UI_Gacha_AvatarIcon_Vodyanitsa.webp',
     ),
   )
-})
-
-test('avatarIcon：目录名取前缀之后的第一个下划线段（安柏是 Ambor）', () => {
-  assert.ok(avatarIcon('UI_AvatarIcon_Ambor_Splash').includes('/avatar/Ambor/'))
-})
-
-test('avatarIcon：空文件名返回空串，避免 <img> 拿到 undefined', () => {
-  assert.equal(avatarIcon(''), '')
-  assert.equal(avatarIcon(null), '')
-})
-
-test('filter：拼出筛选器图标地址', () => {
-  assert.ok(filter('Weapon_Sword').endsWith('/assets/img/filter/UI_FilterIcon_Weapon_Sword.webp'))
-  assert.ok(filter('Element_Pyro').endsWith('/filter/UI_FilterIcon_Element_Pyro.webp'))
-})
-
-test('quality：拼出品质底图地址（文件名就是接口里的 qualityType）', () => {
-  assert.ok(quality('QUALITY_ORANGE').endsWith('/assets/img/quality/QUALITY_ORANGE.webp'))
-  assert.ok(quality('QUALITY_ORANGE_SP').endsWith('/quality/QUALITY_ORANGE_SP.webp'))
-})
-
-test('weaponGacha：按文件名里的英文目录拼出武器立绘地址', () => {
   assert.ok(
-    weaponGacha('UI_EquipIcon_Bow_Alkonost_Gacha').endsWith(
-      '/assets/img/weapon/Alkonost/UI_EquipIcon_Bow_Alkonost_Gacha.webp',
+    asset('UI_EquipIcon_Bow_Alkonost').endsWith('/img/UI_EquipIcon/UI_EquipIcon_Bow_Alkonost.webp'),
+  )
+  assert.ok(asset('UI_ItemIcon_104161').endsWith('/img/UI_ItemIcon/UI_ItemIcon_104161.webp'))
+  assert.ok(asset('UI_RelicIcon_15048_4').endsWith('/img/UI_RelicIcon/UI_RelicIcon_15048_4.webp'))
+  assert.ok(asset('UI_Talent_S_Ayaka_01').endsWith('/img/UI_Talent/UI_Talent_S_Ayaka_01.webp'))
+  assert.ok(
+    asset('UI_Costume_AyakaCostumeFruhling').endsWith(
+      '/img/UI_Costume/UI_Costume_AyakaCostumeFruhling.webp',
     ),
   )
-  // 类型段不是目录名，目录取类型之后的英文名
-  assert.ok(weaponGacha('UI_EquipIcon_Sword_Amenoma_Gacha').includes('/weapon/Amenoma/'))
-  assert.equal(weaponGacha(''), '')
-  assert.equal(weaponGacha(null), '')
+  assert.ok(asset('UI_Icon_Element_Fire').endsWith('/img/UI_Icon/UI_Icon_Element_Fire.webp'))
+  assert.ok(asset('UI_TeyvatNumIcon_5').endsWith('/img/UI_TeyvatNumIcon/UI_TeyvatNumIcon_5.webp'))
+  assert.ok(
+    asset('UI_GachaTypeIcon_Pole').endsWith('/img/UI_GachaTypeIcon/UI_GachaTypeIcon_Pole.webp'),
+  )
+})
+
+test('asset：没有两段前缀的两个家族走特例目录', () => {
+  assert.ok(asset('Skill_A_01').endsWith('/assets/img/Skill/Skill_A_01.webp'))
+  assert.ok(asset('Skill_E_Ayaka').endsWith('/img/Skill/Skill_E_Ayaka.webp'))
+  assert.ok(asset('QUALITY_ORANGE').endsWith('/assets/img/UI_QualityBg/QUALITY_ORANGE.webp'))
+  assert.ok(asset('QUALITY_ORANGE_SP').endsWith('/img/UI_QualityBg/QUALITY_ORANGE_SP.webp'))
+})
+
+test('asset：空值返回空串，避免 <img> 拿到 undefined', () => {
+  assert.equal(asset(''), '')
+  assert.equal(asset(null), '')
+  assert.equal(asset(undefined), '')
+})
+
+test('materialIcon：优先 iconName，缺失时按 id 兜底', () => {
+  assert.ok(
+    materialIcon({ iconName: 'UI_ItemIcon_104161', id: 104161 }).endsWith(
+      '/img/UI_ItemIcon/UI_ItemIcon_104161.webp',
+    ),
+  )
+  // 天赋书的 iconName 后端仍为 null，素材名恰好是 UI_ItemIcon_<id>
+  assert.ok(
+    materialIcon({ iconName: null, id: 104369 }).endsWith(
+      '/img/UI_ItemIcon/UI_ItemIcon_104369.webp',
+    ),
+  )
+  assert.equal(materialIcon({ iconName: '', id: 0 }), '')
+  assert.equal(materialIcon(null), '')
 })

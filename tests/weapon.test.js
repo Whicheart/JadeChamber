@@ -20,10 +20,12 @@ test('weaponLabel：代码转中文名，缺值给占位符', () => {
 })
 
 test('weaponFilterIcon：代码与中文名都能取到同一个图标名', () => {
-  assert.equal(weaponFilterIcon('WEAPON_BOW'), 'Weapon_Bow')
-  assert.equal(weaponFilterIcon('弓'), 'Weapon_Bow')
-  assert.equal(weaponFilterIcon('双手剑'), 'Weapon_Claymore')
-  assert.equal(weaponFilterIcon('WEAPON_POLE'), 'Weapon_Polearm')
+  assert.equal(weaponFilterIcon('WEAPON_BOW'), 'UI_GachaTypeIcon_Bow')
+  assert.equal(weaponFilterIcon('弓'), 'UI_GachaTypeIcon_Bow')
+  assert.equal(weaponFilterIcon('双手剑'), 'UI_GachaTypeIcon_Claymore')
+  // 长柄武器在素材里叫 Pole，不是 Polearm
+  assert.equal(weaponFilterIcon('WEAPON_POLE'), 'UI_GachaTypeIcon_Pole')
+  assert.equal(weaponFilterIcon('长柄武器'), 'UI_GachaTypeIcon_Pole')
 })
 
 test('weaponFilterIcon：未知输入返回空串，交给调用方占位', () => {

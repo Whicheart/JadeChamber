@@ -69,8 +69,19 @@ test('mergeMaterials：按 id 累加数量，且默认同家族相邻、组内 i
   const merged = mergeMaterials(reachedStages(stages, 60))
 
   assert.deepEqual(merged, [
-    { id: 114002, name: '材料B', count: 6 },
-    { id: 114001, name: '材料A', count: 6 },
+    { id: 114002, name: '材料B', iconName: '', count: 6 },
+    { id: 114001, name: '材料A', iconName: '', count: 6 },
+  ])
+})
+
+test('mergeMaterials：costItems 带 iconName 时透传（材料行要显示图标）', () => {
+  const merged = mergeMaterials([
+    { costItems: [{ id: 114001, name: '材料A', iconName: 'UI_ItemIcon_114001', count: 2 }] },
+    { costItems: [{ id: 114001, name: '材料A', iconName: 'UI_ItemIcon_114001', count: 3 }] },
+  ])
+
+  assert.deepEqual(merged, [
+    { id: 114001, name: '材料A', iconName: 'UI_ItemIcon_114001', count: 5 },
   ])
 })
 

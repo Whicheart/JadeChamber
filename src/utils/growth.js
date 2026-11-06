@@ -51,6 +51,7 @@ export function mergeMaterials(stages) {
       const entry = merged.get(item.id) || {
         id: item.id,
         name: item.name || String(item.id),
+        iconName: item.iconName || '',
         count: 0,
       }
       entry.count += item.count || 0
