@@ -173,7 +173,7 @@ watch([filterElem, filterWeapon, filterStar], fetchAvatars, { immediate: true })
 #avatar-list-view {
   display: flex;
   flex-direction: column;
-  width: 60vw;
+  width: 80vw;
   /* App 的 main 有 50px 上内边距，这里补 10px 让筛选栏与顶部留白对齐 */
   height: calc(100% - 10px);
   min-height: 0;

@@ -75,13 +75,23 @@ function currentData(skill) {
   return list.find((item) => item.level === levelOf(skill)) || list[list.length - 1]
 }
 
-// descExtra 有内容时只展示它，否则退回 desc
-function mainDesc(item) {
-  const extra = item?.descExtra
-  return extra && String(extra).trim() ? extra : item?.desc
+// 描述块：desc / descExtra / extraDesc 有值就各占一段，完全重复的只留一份。
+// 文本用字面量 \n 分段，首尾的空分段先去干净，避免渲染出空的 <p>
+function textOf(value) {
+  return String(value ?? '')
+    .replace(/^(\\n)+|(\\n)+$/g, '')
+    .trim()
 }
 
-const loreText = (item) => String(item?.loreDesc ?? '').trim()
+function descBlocks(item) {
+  const blocks = [textOf(item?.desc), textOf(item?.descExtra), textOf(item?.extraDesc)]
+  return [...new Set(blocks.filter(Boolean))]
+}
+
+// 固有天赋：描述之后追加 loreDesc（背景补充）
+function passiveBlocks(item) {
+  return [...new Set([...descBlocks(item), textOf(item?.loreDesc)].filter(Boolean))]
+}
 
 // ========== 数值行 ==========
 // 形如 "一段伤害|{param1:F1P}"，或 "2枚光幕攻击伤害|({param6:F1P}攻击力+{param7:F1P}元素精通)*2"。
@@ -128,7 +138,14 @@ const passiveSkills = computed(() => [
         </div>
       </div>
 
-      <div class="skill-desc" v-html="descHtml(mainDesc(skill))"></div>
+      <div class="desc-group">
+        <div
+          v-for="(block, index) in descBlocks(skill)"
+          :key="index"
+          class="skill-desc"
+          v-html="descHtml(block)"
+        ></div>
+      </div>
 
       <SliderRow
         v-if="maxLevel(skill) > 1"
@@ -166,12 +183,14 @@ const passiveSkills = computed(() => [
           <div v-else class="skill-icon icon-placeholder">图标</div>
           <div class="passive-content">
             <div class="passive-name">{{ passive.name }}</div>
-            <div class="passive-desc" v-html="descHtml(mainDesc(passive))"></div>
-            <p
-              v-if="loreText(passive)"
-              class="passive-desc"
-              v-html="descHtml(loreText(passive))"
-            ></p>
+            <div class="desc-group">
+              <div
+                v-for="(block, index) in passiveBlocks(passive)"
+                :key="index"
+                class="passive-desc"
+                v-html="descHtml(block)"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
@@ -230,6 +249,13 @@ const passiveSkills = computed(() => [
   background-color: var(--clr-white-10);
   color: var(--clr-white-50);
   font-size: 13px;
+}
+
+/* 多段描述（desc / descExtra / extraDesc / loreDesc）之间的间距 */
+.desc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .skill-desc {

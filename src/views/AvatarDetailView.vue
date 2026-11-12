@@ -193,7 +193,7 @@ watch(
 #avatar-detail {
   display: flex;
   flex-direction: column;
-  width: 60vw;
+  width: 70vw;
   /* App 的 main 有 50px 上内边距，这里补 10px 与列表页的筛选栏齐平 */
   height: calc(100% - 10px);
   min-height: 0;

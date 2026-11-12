@@ -4,7 +4,7 @@ import { elementCommonIcon } from '@/utils/element'
 import * as format from '@/utils/format'
 import { asset, materialIcon } from '@/utils/getImage'
 import { mergeMaterials, moraTotal, reachedStages, valueAt } from '@/utils/growth'
-import { weaponFilterIcon } from '@/utils/weapon'
+import { weaponFilterIcon, weaponLabel } from '@/utils/weapon'
 import SliderRow from '@/components/SliderRow.vue'
 
 // 摩拉没有对应的 costItem，固定用 202 号图标（UI_ItemIcon_202 就是那枚金币）
@@ -34,13 +34,26 @@ const title = computed(() => info.value.title || '')
 const desc = computed(() => info.value.desc || '')
 
 const qualityText = computed(() => info.value.qualityType || '')
-// "五星" → 5，"四星" → 4
-const starCount = computed(() => {
-  const map = { 五星: 5, 四星: 4, 三星: 3 }
-  return map[qualityText.value] || 0
-})
 
-const weaponText = computed(() => info.value.weaponType || '')
+// 品质：接口现在给 QUALITY_* 代码，旧数据是「五星」这类中文，两种都认
+const STAR_BY_QUALITY = {
+  QUALITY_ORANGE_SP: 5,
+  QUALITY_ORANGE: 5,
+  QUALITY_PURPLE: 4,
+  QUALITY_BLUE: 3,
+  QUALITY_GREEN: 2,
+  QUALITY_GRAY: 1,
+  五星: 5,
+  四星: 4,
+  三星: 3,
+  二星: 2,
+  一星: 1,
+}
+const starCount = computed(() => STAR_BY_QUALITY[qualityText.value] || 0)
+
+// 接口给的是 WEAPON_SWORD_ONE_HAND 这类代码，展示时换成中文
+const weaponCode = computed(() => info.value.weaponType || '')
+const weaponText = computed(() => weaponLabel(weaponCode.value))
 const weaponIcon = computed(() => {
   const iconName = weaponFilterIcon(weaponText.value)
   return iconName ? asset(iconName) : ''
@@ -49,7 +62,8 @@ const weaponIcon = computed(() => {
 // 元素：after 优先；接口给的是中文（冰/水/火/雷/风/岩/草），详情页用彩色圆形图标
 const elementText = computed(() => pick(info.value.element?.befor, info.value.element?.after))
 const elementIcon = computed(() => {
-  const iconName = elementCommonIcon(elementText.value)
+  // 接口直接给了地区风格的图标名（Common / Liyue / Fatui / Player / Ranger），优先用它
+  const iconName = info.value.element?.iconName || elementCommonIcon(elementText.value)
   return iconName ? asset(iconName) : ''
 })
 
@@ -78,6 +92,11 @@ const constellationText = computed(
 )
 // 神之眼：接口字段名是 vision（befor / after 两版）
 const visionText = computed(() => pick(info.value.vision?.befor, info.value.vision?.after) || '—')
+// 神之眼吊坠图标：接口给 UI_Img_Pendant_*（蒙德/璃月/至冬/始基力各不相同）
+const visionIcon = computed(() => {
+  const iconName = info.value.vision?.iconName
+  return iconName ? asset(iconName) : ''
+})
 
 const cvList = computed(() => {
   const cv = info.value.cv || {}
@@ -164,22 +183,31 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 
       <div class="info-box">
         <div class="name-row">
+          <!-- 元素吊坠：神之眼图标作背景图，元素图标放在里面 -->
+          <span
+            v-if="visionIcon || elementIcon"
+            class="element-pendant"
+            :style="visionIcon ? { backgroundImage: `url('${visionIcon}')` } : undefined"
+            :title="[visionText, elementText].filter(Boolean).join(' · ')"
+          >
+            <img v-if="elementIcon" class="element-icon" :src="elementIcon" :alt="elementText" />
+          </span>
           <h1>{{ name }}</h1>
           <span class="stars">
             <span v-for="i in 5" :key="i" :class="['star', { on: i <= starCount }]">★</span>
           </span>
         </div>
+        <!-- 武器类型图标 -->
+        <div v-if="weaponIcon" class="icon-row">
+          <span class="icon-chip" :title="weaponText">
+            <img class="type-icon" :src="weaponIcon" :alt="weaponText" />
+          </span>
+        </div>
+
         <div v-if="title" class="title">{{ title }}</div>
         <p v-if="desc" class="desc">{{ desc }}</p>
 
         <ul class="attr-list">
-          <li>
-            <span class="label">武器类型</span>
-            <span class="value">
-              <img v-if="weaponIcon" :src="weaponIcon" class="mini-icon" alt="" />
-              {{ weaponText || '—' }}
-            </span>
-          </li>
           <li>
             <span class="label">实装时间</span>
             <span class="value">{{ releaseDate }}</span>
@@ -195,13 +223,6 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
           <li>
             <span class="label">命之座</span>
             <span class="value">{{ constellationText }}</span>
-          </li>
-          <li>
-            <span class="vision">{{ visionText }}</span>
-            <span class="value">
-              <img v-if="elementIcon" :src="elementIcon" class="mini-icon" alt="" />
-              {{ elementText || '—' }}
-            </span>
           </li>
           <li v-for="cv in cvList" :key="cv.label">
             <span class="label">{{ cv.label }}CV</span>
@@ -236,64 +257,69 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
       <h2 class="panel-title">养成材料</h2>
 
       <div class="material-layout">
-        <div class="slider-group">
+        <!-- 角色等级滑块紧挨着突破材料，一眼能看出滑的是哪一组 -->
+        <div class="material-group">
           <SliderRow v-model="charLevel" :max="100" label="角色等级" />
-          <SliderRow v-model="talentLevels.normal" :max="10" label="普通攻击" />
-          <SliderRow v-model="talentLevels.skill" :max="10" label="元素战技" />
-          <SliderRow v-model="talentLevels.burst" :max="10" label="元素爆发" />
+          <h3>突破材料 · {{ promoteStages.length }} 阶</h3>
+          <div v-if="levelUpMaterials.items.length" class="material-rows">
+            <div
+              v-for="item in levelUpMaterials.items"
+              :key="item.id"
+              class="material-row"
+              :title="item.name"
+            >
+              <img
+                v-if="materialIcon(item)"
+                class="material-icon"
+                :src="materialIcon(item)"
+                :alt="item.name"
+                loading="lazy"
+              />
+              <span class="count">{{ item.count }}</span>
+            </div>
+            <div class="material-row mora" title="摩拉">
+              <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
+              <span class="count">{{ levelUpMaterials.mora }}</span>
+            </div>
+          </div>
+          <div v-else class="empty">当前等级无需突破材料</div>
         </div>
 
-        <div class="material-list">
-          <div class="material-group">
-            <h3>突破材料 · {{ promoteStages.length }} 阶</h3>
-            <div v-if="levelUpMaterials.items.length" class="material-rows">
-              <div v-for="item in levelUpMaterials.items" :key="item.id" class="material-row">
-                <img
-                  v-if="materialIcon(item)"
-                  class="material-icon"
-                  :src="materialIcon(item)"
-                  :alt="item.name"
-                  loading="lazy"
-                />
-                <span class="material-name">{{ item.name }}</span>
-                <span class="count">×{{ item.count }}</span>
-              </div>
-              <div class="material-row mora">
-                <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
-                <span class="material-name">摩拉</span>
-                <span class="count">×{{ levelUpMaterials.mora }}</span>
-              </div>
+        <!-- 技能等级滑块紧挨着天赋材料 -->
+        <div class="material-group">
+          <div class="talent-sliders">
+            <SliderRow v-model="talentLevels.normal" :max="10" label="普通攻击" />
+            <SliderRow v-model="talentLevels.skill" :max="10" label="元素战技" />
+            <SliderRow v-model="talentLevels.burst" :max="10" label="元素爆发" />
+          </div>
+          <h3>天赋材料</h3>
+          <div v-if="talentMaterials.items.length" class="material-rows">
+            <div
+              v-for="item in talentMaterials.items"
+              :key="item.id"
+              class="material-row"
+              :title="item.name"
+            >
+              <img
+                v-if="materialIcon(item)"
+                class="material-icon"
+                :src="materialIcon(item)"
+                :alt="item.name"
+                loading="lazy"
+              />
+              <span class="count">{{ item.count }}</span>
             </div>
-            <div v-else class="empty">当前等级无需突破材料</div>
-          </div>
-
-          <div class="material-group">
-            <h3>天赋材料</h3>
-            <div v-if="talentMaterials.items.length" class="material-rows">
-              <div v-for="item in talentMaterials.items" :key="item.id" class="material-row">
-                <img
-                  v-if="materialIcon(item)"
-                  class="material-icon"
-                  :src="materialIcon(item)"
-                  :alt="item.name"
-                  loading="lazy"
-                />
-                <span class="material-name">{{ item.name }}</span>
-                <span class="count">×{{ item.count }}</span>
-              </div>
-              <div class="material-row mora">
-                <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
-                <span class="material-name">摩拉</span>
-                <span class="count">×{{ talentMaterials.mora }}</span>
-              </div>
+            <div class="material-row mora" title="摩拉">
+              <img class="material-icon" :src="asset(MORA_ICON)" alt="摩拉" loading="lazy" />
+              <span class="count">{{ talentMaterials.mora }}</span>
             </div>
-            <div v-else class="empty">当前等级无需天赋材料</div>
           </div>
+          <div v-else class="empty">当前等级无需天赋材料</div>
+        </div>
 
-          <div class="material-total">
-            <span>摩拉合计</span>
-            <span>{{ totalMora }}</span>
-          </div>
+        <div class="material-total">
+          <span>摩拉合计</span>
+          <span>{{ totalMora }}</span>
         </div>
       </div>
     </section>
@@ -316,7 +342,7 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 }
 
 .splash-box {
-  width: 46%;
+  width: 50%;
   height: 560px;
   display: flex;
   justify-content: center;
@@ -341,8 +367,52 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 
 .name-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 16px;
+}
+
+/* 元素吊坠：神之眼图标作背景图，元素图标作为子元素居中放在里面 */
+.element-pendant {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 150%;
+}
+
+/* 元素图标：居中放在神之眼背景图里 */
+.element-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* 武器类型图标 */
+.icon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: var(--clr-white-10);
+}
+
+.type-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .name-row h1 {
@@ -406,17 +476,6 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
   font-size: 15px;
 }
 
-.mini-icon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-}
-
-.vision {
-  color: var(--clr-white-50);
-  font-size: 14px;
-}
-
 /* ========== B 块 ========== */
 .panel-title {
   font-size: 22px;
@@ -455,72 +514,77 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
 }
 
 /* ========== C 块 ========== */
+/* 上下两大组：角色等级 + 突破材料、技能等级 + 天赋材料 */
 .material-layout {
   display: flex;
-  gap: 32px;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.slider-group {
-  width: 44%;
+.material-group {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
-.material-list {
-  flex: 1;
+.talent-sliders {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .material-group h3 {
   font-size: 16px;
   font-weight: normal;
   color: var(--clr-white-70);
-  margin-bottom: 8px;
 }
 
 .material-rows {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
+/* 材料格：1:1 方块，数量压在右下角（名字走 title 提示） */
 .material-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  justify-content: space-between;
-  padding: 8px 14px;
-  border-radius: 8px;
+  justify-content: center;
+  width: 64px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 10px;
   background-color: var(--clr-white-10);
-  font-size: 15px;
 }
 
 .material-icon {
-  flex: none;
-  width: 26px;
-  height: 26px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-/* 名字过长时省略，数量始终贴右侧 */
-.material-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.material-row.mora {
+  color: #ffcc33;
 }
 
-.material-row.mora {
-  grid-column: 1 / -1;
+/* 摩拉数量跟图标同色，和普通材料区分开 */
+.material-row.mora .count {
   color: #ffcc33;
 }
 
 .count {
-  color: var(--clr-white-70);
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--clr-white);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .material-total {
@@ -606,25 +670,47 @@ const totalMora = computed(() => levelUpMaterials.value.mora + talentMaterials.v
     font-size: 20px;
   }
 
-  /* C 块：滑块与材料清单从左右并排改为上下排布 */
+  /* C 块：两组「滑块 + 材料」纵向排列 */
   .material-layout {
-    flex-direction: column;
-    gap: 16px;
+    gap: 20px;
   }
 
-  .slider-group {
-    width: 100%;
-    gap: 12px;
+  .material-group,
+  .talent-sliders {
+    gap: 10px;
   }
 
-  /* 材料名 + 数量在手机上两列太挤，改成单列 */
+  /* 元素吊坠与武器类型图标在手机上略缩一号 */
+  .element-pendant {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon-chip {
+    width: 34px;
+    height: 34px;
+  }
+
+  .type-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .element-icon {
+    width: 19px;
+    height: 19px;
+  }
+
   .material-rows {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
   }
 
   .material-row {
-    padding: 7px 12px;
-    font-size: 14px;
+    width: 56px;
+  }
+
+  .count {
+    font-size: 11px;
   }
 
   .material-total {

@@ -19,7 +19,11 @@ export function valueAt(list, level, fallback = 0) {
 
 // 第 index 阶突破的触发等级
 export function promoteThreshold(stages, index) {
-  return index === 0 ? FIRST_PROMOTE_LEVEL : Number(stages?.[index - 1]?.maxLevel ?? 0)
+  if (index === 0) return FIRST_PROMOTE_LEVEL
+
+  // 角色接口把字段叫 unlockMaxLevel / moraCost，武器接口仍叫 maxLevel / mora，两个键都要认
+  const stage = stages?.[index - 1]
+  return Number(stage?.unlockMaxLevel ?? stage?.maxLevel ?? 0)
 }
 
 // 当前等级已经越过的突破阶段
@@ -73,5 +77,8 @@ export function mergeMaterials(stages) {
 
 // 若干阶段的摩拉合计
 export function moraTotal(stages) {
-  return (stages || []).reduce((sum, stage) => sum + (stage?.mora || 0), 0)
+  return (stages || []).reduce(
+    (sum, stage) => sum + (Number(stage?.moraCost ?? stage?.mora) || 0),
+    0,
+  )
 }
