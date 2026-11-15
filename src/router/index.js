@@ -46,6 +46,20 @@ const router = createRouter({
       component: Formulae,
     },
     // { path: '/banners', component: () => import('@/views/BannerListView.vue') },
+
+    // demos
+    // {
+    //   path: '/demos/avatar-list',
+    //   component: () => import('@/demos/AvatarListViewDemo.vue'),
+    // },
+    // {
+    //   path: '/demos/weapon-list',
+    //   component: () => import('@/demos/WeaponListViewDemo.vue'),
+    // },
+    // {
+    //   path: '/demos/artifact-list',
+    //   component: () => import('@/demos/ArtifactListViewDemo.vue'),
+    // },
   ],
 })
 
