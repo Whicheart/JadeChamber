@@ -28,28 +28,30 @@ function buttonStyle(button) {
 </script>
 
 <template>
-  <div v-if="open" class="filter-panel">
-    <section v-for="group in groups" :key="group.id" class="filter-group">
-      <h3 class="filter-title">{{ group.title }}</h3>
+  <Transition name="filter-panel">
+    <div v-if="open" class="filter-panel">
+      <section v-for="group in groups" :key="group.id" class="filter-group">
+        <h3 class="filter-title">{{ group.title }}</h3>
 
-      <div class="filter-buttons">
-        <button
-          v-for="button in group.buttons"
-          :key="button.id"
-          type="button"
-          class="filter-btn"
-          :class="{ active: button.active, 'text-btn': !button.iconName }"
-          :style="buttonStyle(button)"
-          :aria-label="button.label || undefined"
-          :aria-pressed="button.active"
-          :title="button.label || undefined"
-          @click="$emit('toggle', group.id, button.id)"
-        >
-          {{ button.iconName ? '' : button.label }}
-        </button>
-      </div>
-    </section>
-  </div>
+        <div class="filter-buttons">
+          <button
+            v-for="button in group.buttons"
+            :key="button.id"
+            type="button"
+            class="filter-btn"
+            :class="{ active: button.active, 'text-btn': !button.iconName }"
+            :style="buttonStyle(button)"
+            :aria-label="button.label || undefined"
+            :aria-pressed="button.active"
+            :title="button.label || undefined"
+            @click="$emit('toggle', group.id, button.id)"
+          >
+            {{ button.iconName ? '' : button.label }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -62,6 +64,28 @@ function buttonStyle(button) {
   border: 1px solid var(--clr-white-10);
   border-radius: 16px;
   background-color: var(--clr-black-80);
+}
+
+/* 展开 / 收起：淡入淡出 + 从上方落位，纯视觉，不占文档流高度 */
+.filter-panel-enter-active,
+.filter-panel-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.filter-panel-enter-from,
+.filter-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* 用户关闭动效时直接显示 */
+@media (prefers-reduced-motion: reduce) {
+  .filter-panel-enter-active,
+  .filter-panel-leave-active {
+    transition: none;
+  }
 }
 
 .filter-title {
