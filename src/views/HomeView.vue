@@ -9,7 +9,7 @@ const navList = [
       { id: 11, content: '角色', path: '/avatars' },
       { id: 12, content: '武器', path: '/weapons' },
       { id: 13, content: '圣遗物', path: '/artifacts' },
-      { id: 14, content: '敌对单位', path: '/' },
+      { id: 14, content: '敌对单位', path: '/monsters' },
       { id: 16, content: '深境螺旋', path: '/' },
       { id: 17, content: '幽境危战', path: '/' },
       { id: 18, content: '幻想真境剧诗', path: '/' },
