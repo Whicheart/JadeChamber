@@ -5,6 +5,7 @@ import AvatarList from '@/views/AvatarListView.vue'
 import WeaponList from '@/views/WeaponListView.vue'
 import Formulae from '@/views/FormulaeView.vue'
 import ArtifactCalculator from '@/views/ArtifactCalculatorView.vue'
+import MonsterList from '@/views/MonsterListView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +35,10 @@ const router = createRouter({
       component: () => import('@/views/ArtifactListView.vue'),
     },
     {
+      path: '/monsters',
+      component: MonsterList,
+    },
+    {
       path: '/artifact/:setId',
       component: () => import('@/views/ArtifactDetailView.vue'),
     },
@@ -48,18 +53,6 @@ const router = createRouter({
     // { path: '/banners', component: () => import('@/views/BannerListView.vue') },
 
     // demos
-    // {
-    //   path: '/demos/avatar-list',
-    //   component: () => import('@/demos/AvatarListViewDemo.vue'),
-    // },
-    // {
-    //   path: '/demos/weapon-list',
-    //   component: () => import('@/demos/WeaponListViewDemo.vue'),
-    // },
-    // {
-    //   path: '/demos/artifact-list',
-    //   component: () => import('@/demos/ArtifactListViewDemo.vue'),
-    // },
   ],
 })
 
