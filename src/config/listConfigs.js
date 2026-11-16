@@ -112,8 +112,33 @@ function weaponTypeGroup() {
   }
 }
 
+// 怪物图鉴分类：接口只给代码，中文名与展示顺序在这里维护
+const MONSTER_TYPES = [
+  { code: 'CODEX_SUBTYPE_ELEMENTAL', label: '元素生物' },
+  { code: 'CODEX_SUBTYPE_HILICHURL', label: '丘丘部族' },
+  { code: 'CODEX_SUBTYPE_ABYSS', label: '深渊' },
+  { code: 'CODEX_SUBTYPE_FATUI', label: '愚人众' },
+  { code: 'CODEX_SUBTYPE_AUTOMATRON', label: '自律机关' },
+  { code: 'CODEX_SUBTYPE_HUMAN', label: '人类势力' },
+  { code: 'CODEX_SUBTYPE_BEAST', label: '异种魔兽' },
+  { code: 'CODEX_SUBTYPE_BOSS', label: '值得铭记的强敌' },
+]
+
+const MONSTER_TYPE_LABELS = Object.fromEntries(MONSTER_TYPES.map((type) => [type.code, type.label]))
+
+// 怪物的分类筛选：接口参数名是 types（复数），多值为 OR
+function monsterTypeGroup() {
+  return {
+    id: 'type',
+    title: '怪物类型',
+    param: 'types',
+    multiple: true,
+    buttons: MONSTER_TYPES.map((type) => button(type.code, type.label, 'var(--clr-white)')),
+  }
+}
+
 /**
- * 三个列表页的差异全部收敛在这里，ListView 只负责按配置请求与渲染。
+ * 列表页的差异全部收敛在这里，ListView 只负责按配置请求与渲染。
  *
  * 这里只写「随列表实体变化的东西」，越权项一律不收：
  * - 不写宽度、防抖、滚动行为等页面/组件机制
@@ -171,5 +196,20 @@ export const LIST_CONFIGS = {
     },
     card: { ratio: '1 / 1' },
     to: (set) => `/artifact/${set.setId}`,
+  }),
+
+  monster: defineList({
+    endpoint: '/api/monster/list',
+    name: '怪物',
+    noImage: '图标待补充',
+    groups: () => [monsterTypeGroup()],
+    fields: {
+      key: 'id',
+      image: 'iconName',
+      name: 'name',
+      label: (monster) => `${monster.name} ${MONSTER_TYPE_LABELS[monster.type] ?? ''}`.trim(),
+    },
+    card: { ratio: '1 / 1', fit: 'contain' },
+    to: (monster) => `/monster/${monster.id}`,
   }),
 }
