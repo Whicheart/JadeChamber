@@ -1,21 +1,11 @@
 /**
  * 图片地址解析
  *
- * 后端现在给的所有图片字段都是「完整的资源文件名」（不含扩展名），而
- * src/assets/img/ 已经按资源类型分目录存放，目录名可以直接从文件名推出来：
+ * 通过图片名的二级前缀解析出图片所在的目录，返回图片的地址。
  *
- *   UI_AvatarIcon_Ayaka        → UI_AvatarIcon/…   （取前两段）
- *   UI_Gacha_AvatarImg_Ayaka   → UI_Gacha/…
- *   UI_EquipIcon_Bow_Alkonost  → UI_EquipIcon/…
- *   UI_ItemIcon_104161         → UI_ItemIcon/…
- *   UI_RelicIcon_15048_4       → UI_RelicIcon/…
- *   UI_Talent_S_Ayaka_01       → UI_Talent/…
- *   UI_Costume_AyakaCostumeFruhling → UI_Costume/…
- *   UI_Icon_Element_Fire       → UI_Icon/…
- *   UI_TeyvatNumIcon_5         → UI_TeyvatNumIcon/…
- *
- * 例外只有两个没有两段前缀的家族：技能图标 `Skill_A_01` 放 Skill/，
- * 品质底图 `QUALITY_ORANGE` 放 UI_QualityBg/。
+ * 例外：
+ * 技能图标位于 Skill/，
+ * 品质底图位于 UI_QualityBg/。
  */
 const DIR_BY_HEAD = {
   Skill: 'Skill',
@@ -30,6 +20,19 @@ export function asset(iconName) {
   const dir = DIR_BY_HEAD[head] ?? name.split('_').slice(0, 2).join('_')
 
   return new URL(`../assets/img/${dir}/${name}.webp`, import.meta.url).href
+}
+
+/**
+ * 杂项 UI 素材地址
+ *
+ * 强制只指向 img/UI/。
+ */
+export function uiAsset(iconName) {
+  if (!iconName) return ''
+
+  const name = String(iconName)
+
+  return new URL(`../assets/img/UI/${name}.webp`, import.meta.url).href
 }
 
 /**

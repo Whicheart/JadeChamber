@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { asset, materialIcon } from '../src/utils/getImage.js'
+import { asset, materialIcon, uiAsset } from '../src/utils/getImage.js'
 
 test('asset：UI_ 前缀的两段名放进同名目录', () => {
   assert.ok(
@@ -46,6 +46,25 @@ test('asset：空值返回空串，避免 <img> 拿到 undefined', () => {
   assert.equal(asset(''), '')
   assert.equal(asset(null), '')
   assert.equal(asset(undefined), '')
+})
+
+test('uiAsset：不管前缀，一律指向 img/UI/', () => {
+  // 筛选按钮的素材统一放在 img/UI/，前缀推不出目录（UI_Btn_* 会推成 img/UI_Btn/）
+  assert.ok(
+    uiAsset('UI_Btn_MusicGame_Activity_IocnBg').endsWith(
+      '/img/UI/UI_Btn_MusicGame_Activity_IocnBg.webp',
+    ),
+  )
+  assert.ok(
+    uiAsset('UI_Btn_MVM_Activity_Details_02').endsWith(
+      '/img/UI/UI_Btn_MVM_Activity_Details_02.webp',
+    ),
+  )
+  assert.ok(uiAsset('UI_Outline_Element_Fire').endsWith('/img/UI/UI_Outline_Element_Fire.webp'))
+  assert.ok(uiAsset('UI_TeyvatNumIcon_4').endsWith('/img/UI/UI_TeyvatNumIcon_4.webp'))
+  assert.equal(uiAsset(''), '')
+  assert.equal(uiAsset(null), '')
+  assert.equal(uiAsset(undefined), '')
 })
 
 test('materialIcon：优先 iconName，缺失时按 id 兜底', () => {
