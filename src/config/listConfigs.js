@@ -1,16 +1,6 @@
-import { ELEMENT_TYPES, elementFilterIcon } from '@/utils/element'
-import { WEAPON_TYPES, weaponLabel } from '@/utils/weapon'
+import { weaponLabel } from '@/utils/weapon'
 
-// 星级主题色：筛选按钮激活时的描边与发光色
-const STAR_COLORS = {
-  5: 'rgb(255, 180, 65)',
-  4: 'rgb(180, 150, 240)',
-  3: 'rgb(120, 170, 235)',
-  2: 'rgb(110, 200, 155)',
-  1: 'rgb(170, 170, 170)',
-}
-
-// 角色品质底图：只能取 UI_QualityBg 里真实存在的 6 档，未知品质退到灰底
+// 品质底图
 const QUALITY_BACKGROUNDS = new Set([
   'QUALITY_BLUE',
   'QUALITY_GRAY',
@@ -20,7 +10,7 @@ const QUALITY_BACKGROUNDS = new Set([
   'QUALITY_PURPLE',
 ])
 
-// 武器星级 → 品质底图（卡片底色）
+// 星级 → 品质底图
 const QUALITY_BY_RANK = {
   5: 'QUALITY_ORANGE',
   4: 'QUALITY_PURPLE',
@@ -56,94 +46,240 @@ function mediaFields({ image, quality = 'qualityType', extra = {} }) {
   }
 }
 
-// 一个筛选按钮：只有内容，勾选状态由组件自己维护
-function button(id, label, color, iconName = '') {
-  return { id, label, color, iconName }
+// ================ 分类配置数组 ================
+// 星级类型分类
+const QUALITY_TYPES = [
+  {
+    code: 'QUALITY_ORANGE',
+    rankCode: '5',
+    icon: 'UI_BtnIcon_Quality_5',
+    activeIcon: 'UI_QualityIcon_TeyvatNum_5',
+    label: '5★',
+  },
+  {
+    code: 'QUALITY_PURPLE',
+    rankCode: '4',
+    icon: 'UI_BtnIcon_Quality_4',
+    activeIcon: 'UI_QualityIcon_TeyvatNum_4',
+    label: '4★',
+  },
+  {
+    code: 'QUALITY_BLUE',
+    rankCode: '3',
+    icon: 'UI_BtnIcon_Quality_3',
+    activeIcon: 'UI_QualityIcon_TeyvatNum_3',
+    label: '3★',
+  },
+  {
+    code: 'QUALITY_GREEN',
+    rankCode: '2',
+    icon: 'UI_BtnIcon_Quality_2',
+    activeIcon: 'UI_QualityIcon_TeyvatNum_2',
+    label: '2★',
+  },
+  {
+    code: 'QUALITY_GRAY',
+    rankCode: '1',
+    icon: 'UI_BtnIcon_Quality_1',
+    activeIcon: 'UI_QualityIcon_TeyvatNum_1',
+    label: '1★',
+  },
+]
+
+// 元素类型分类
+const ELEMENT_TYPES = [
+  {
+    code: 'Fire',
+    icon: 'UI_BtnIcon_Element_Fire',
+    activeIcon: 'UI_BtnIcon_Active_Element_Fire',
+    label: '火',
+  },
+  {
+    code: 'Water',
+    icon: 'UI_BtnIcon_Element_Water',
+    activeIcon: 'UI_BtnIcon_Active_Element_Water',
+    label: '水',
+  },
+  {
+    code: 'Ice',
+    icon: 'UI_BtnIcon_Element_Ice',
+    activeIcon: 'UI_BtnIcon_Active_Element_Ice',
+    label: '冰',
+  },
+  {
+    code: 'Electric',
+    icon: 'UI_BtnIcon_Element_Electric',
+    activeIcon: 'UI_BtnIcon_Active_Element_Electric',
+    label: '雷',
+  },
+  {
+    code: 'Wind',
+    icon: 'UI_BtnIcon_Element_Wind',
+    activeIcon: 'UI_BtnIcon_Active_Element_Wind',
+    label: '风',
+  },
+  {
+    code: 'Rock',
+    icon: 'UI_BtnIcon_Element_Rock',
+    activeIcon: 'UI_BtnIcon_Active_Element_Rock',
+    label: '岩',
+  },
+  {
+    code: 'Grass',
+    icon: 'UI_BtnIcon_Element_Grass',
+    activeIcon: 'UI_BtnIcon_Active_Element_Grass',
+    label: '草',
+  },
+]
+
+// 武器类型分类
+const WEAPON_TYPES = [
+  {
+    code: 'WEAPON_SWORD_ONE_HAND',
+    icon: 'UI_BtnIcon_Weapon_Sword',
+    activeIcon: 'UI_BtnIcon_Active_Weapon_Sword',
+    label: '单手剑',
+  },
+  {
+    code: 'WEAPON_CLAYMORE',
+    icon: 'UI_BtnIcon_Weapon_Claymore',
+    activeIcon: 'UI_BtnIcon_Active_Weapon_Claymore',
+    label: '双手剑',
+  },
+  {
+    code: 'WEAPON_POLE',
+    icon: 'UI_BtnIcon_Weapon_Pole',
+    activeIcon: 'UI_BtnIcon_Active_Weapon_Pole',
+    label: '长柄武器',
+  },
+  {
+    code: 'WEAPON_CATALYST',
+    icon: 'UI_BtnIcon_Weapon_Catalyst',
+    activeIcon: 'UI_BtnIcon_Active_Weapon_Catalyst',
+    label: '法器',
+  },
+  {
+    code: 'WEAPON_BOW',
+    icon: 'UI_BtnIcon_Weapon_Bow',
+    activeIcon: 'UI_BtnIcon_Active_Weapon_Bow',
+    label: '弓',
+  },
+]
+
+// 怪物类型分类
+const MONSTER_TYPES = [
+  {
+    code: 'CODEX_SUBTYPE_ELEMENTAL',
+    icon: 'UI_BtnIcon_Monster_Elemental',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Elemental',
+    label: '元素生物',
+  },
+  {
+    code: 'CODEX_SUBTYPE_HILICHURL',
+    icon: 'UI_BtnIcon_Monster_Hilichurl',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Hilichurl',
+    label: '丘丘部族',
+  },
+  {
+    code: 'CODEX_SUBTYPE_ABYSS',
+    icon: 'UI_BtnIcon_Monster_Abyss',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Abyss',
+    label: '深渊',
+  },
+  {
+    code: 'CODEX_SUBTYPE_FATUI',
+    icon: 'UI_BtnIcon_Monster_Fatui',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Fatui',
+    label: '愚人众',
+  },
+  {
+    code: 'CODEX_SUBTYPE_AUTOMATRON',
+    icon: 'UI_BtnIcon_Monster_Automatron',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Automatron',
+    label: '自律机关',
+  },
+  {
+    code: 'CODEX_SUBTYPE_HUMAN',
+    icon: 'UI_BtnIcon_Monster_Human',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Human',
+    label: '人类势力',
+  },
+  {
+    code: 'CODEX_SUBTYPE_BEAST',
+    icon: 'UI_BtnIcon_Monster_Beast',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Beast',
+    label: '异种魔兽',
+  },
+  {
+    code: 'CODEX_SUBTYPE_BOSS',
+    icon: 'UI_BtnIcon_Monster_Boss',
+    activeIcon: 'UI_BtnIcon_Active_Monster_Boss',
+    label: '值得铭记的强敌',
+  },
+]
+
+// ================ 筛选组 ================
+// 筛选按钮
+function button(id, label, iconName, activeIconName) {
+  return { id, label, iconName, activeIconName }
 }
 
-// 角色的星级筛选：只有四星紫、五星金两档，图标借用提瓦特数字
-function qualityStarGroup() {
+/**
+ * 星级类型筛选组
+ *
+ * mode：可写 code 或 rankCode，默认 code。使用 code 时，按钮 id 是 QUALITY_*，使用 rankCode 时，按钮 id 是 1~5。
+ *
+ * count：可写 1~5，默认 5。取前 count 个星级类型。
+ */
+function qualityStarGroup(mode = 'code', count = 5) {
   return {
     id: 'star',
     title: '星级',
     param: 'qualityTypes',
     multiple: true,
-    buttons: [
-      button('QUALITY_PURPLE', '4★', STAR_COLORS[4], 'UI_TeyvatNumIcon_4'),
-      button('QUALITY_ORANGE', '5★', STAR_COLORS[5], 'UI_TeyvatNumIcon_5'),
-    ],
-  }
-}
-
-// 按星级数字生成的筛选组：默认带数字图标，icon: false 时只有文字
-function rankStarGroup(ranks, { icon = true } = {}) {
-  return {
-    id: 'star',
-    title: '星级',
-    param: 'ranks',
-    multiple: true,
-    buttons: ranks.map((rank) =>
-      button(rank, `${rank}★`, STAR_COLORS[rank], icon ? `UI_TeyvatNumIcon_${rank}` : ''),
+    buttons: QUALITY_TYPES.slice(0, count).map((type) =>
+      button(mode === 'code' ? type.code : type.rankCode, type.label, type.icon, type.activeIcon),
     ),
   }
 }
 
+// 元素类型筛选组
 function elementGroup() {
   return {
     id: 'element',
     title: '元素类型',
     param: 'elements',
     multiple: true,
-    buttons: ELEMENT_TYPES.map((type) =>
-      button(type.name, type.label, type.color, elementFilterIcon(type.name)),
-    ),
+    buttons: ELEMENT_TYPES.map((type) => button(type.code, type.label, type.icon, type.activeIcon)),
   }
 }
 
+// 武器类型筛选组
 function weaponTypeGroup() {
   return {
     id: 'weapon-type',
     title: '武器类型',
     param: 'weaponTypes',
     multiple: true,
-    buttons: WEAPON_TYPES.map((type) =>
-      button(type.code, type.label, 'var(--clr-white)', type.iconName),
-    ),
+    buttons: WEAPON_TYPES.map((type) => button(type.code, type.label, type.icon, type.activeIcon)),
   }
 }
 
-// 怪物图鉴分类：接口只给代码，中文名与展示顺序在这里维护
-const MONSTER_TYPES = [
-  { code: 'CODEX_SUBTYPE_ELEMENTAL', label: '元素生物' },
-  { code: 'CODEX_SUBTYPE_HILICHURL', label: '丘丘部族' },
-  { code: 'CODEX_SUBTYPE_ABYSS', label: '深渊' },
-  { code: 'CODEX_SUBTYPE_FATUI', label: '愚人众' },
-  { code: 'CODEX_SUBTYPE_AUTOMATRON', label: '自律机关' },
-  { code: 'CODEX_SUBTYPE_HUMAN', label: '人类势力' },
-  { code: 'CODEX_SUBTYPE_BEAST', label: '异种魔兽' },
-  { code: 'CODEX_SUBTYPE_BOSS', label: '值得铭记的强敌' },
-]
-
-const MONSTER_TYPE_LABELS = Object.fromEntries(MONSTER_TYPES.map((type) => [type.code, type.label]))
-
-// 怪物的分类筛选：接口参数名是 types（复数），多值为 OR
+// 怪物类型筛选组
 function monsterTypeGroup() {
   return {
     id: 'type',
     title: '怪物类型',
     param: 'types',
     multiple: true,
-    buttons: MONSTER_TYPES.map((type) => button(type.code, type.label, 'var(--clr-white)')),
+    buttons: MONSTER_TYPES.map((type) => button(type.code, type.label, type.icon, type.activeIcon)),
   }
 }
 
+const MONSTER_TYPE_LABELS = Object.fromEntries(MONSTER_TYPES.map((type) => [type.code, type.label]))
+
 /**
  * 列表页的差异全部收敛在这里，ListView 只负责按配置请求与渲染。
- *
- * 这里只写「随列表实体变化的东西」，越权项一律不收：
- * - 不写宽度、防抖、滚动行为等页面/组件机制
- * - 不写勾选状态，按钮只描述内容
- * - 卡片只允许 ratio / fit，都是 MediaCard 已有的 prop
  *
  * 字段说明：
  * - endpoint：列表接口地址
@@ -157,7 +293,7 @@ export const LIST_CONFIGS = {
   avatar: defineList({
     endpoint: '/api/avatar/list',
     name: '角色',
-    groups: () => [qualityStarGroup(), elementGroup(), weaponTypeGroup()],
+    groups: () => [qualityStarGroup('code', 2), elementGroup(), weaponTypeGroup()],
     fields: mediaFields({
       image: 'GachaIconName',
       quality: (avatar) =>
@@ -170,7 +306,7 @@ export const LIST_CONFIGS = {
     endpoint: '/api/weapon/list',
     name: '武器',
     noImage: '立绘待补充',
-    groups: () => [rankStarGroup([5, 4, 3, 2, 1]), weaponTypeGroup()],
+    groups: () => [qualityStarGroup('rankCode'), weaponTypeGroup()],
     fields: mediaFields({
       image: 'GachaCardName',
       quality: (weapon) => QUALITY_BY_RANK[weapon.rank] ?? 'QUALITY_GRAY',
@@ -187,10 +323,11 @@ export const LIST_CONFIGS = {
     name: '圣遗物',
     emptyName: '圣遗物套装',
     noImage: '图标待补充',
-    groups: () => [rankStarGroup([5, 4, 3], { icon: false })],
+    groups: () => [qualityStarGroup('rankCode', 3)],
     fields: {
       key: 'setId',
       image: 'setIconName',
+      quality: (set) => QUALITY_BY_RANK[set.maxRankLevel] ?? 'QUALITY_GRAY',
       name: 'name',
       label: (set) => `${set.name} ${set.maxRankLevel}★`,
     },
@@ -200,7 +337,7 @@ export const LIST_CONFIGS = {
 
   monster: defineList({
     endpoint: '/api/monster/list',
-    name: '怪物',
+    name: '敌对生物',
     noImage: '图标待补充',
     groups: () => [monsterTypeGroup()],
     fields: {

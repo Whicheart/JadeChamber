@@ -1,5 +1,5 @@
 <script setup>
-// 顶部筛选栏：展开/收起按钮 + 搜索输入框，两个列表页共用
+// 筛选栏：展开/收起按钮 + 搜索输入框
 defineProps({
   modelValue: {
     type: String,
@@ -41,24 +41,33 @@ defineEmits(['update:modelValue', 'update:open'])
 
 <style scoped>
 .filter-bar {
+  position: relative;
   flex: none;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
+  padding: 6px 15px;
+}
+
+.filter-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 0 solid transparent;
+  border-image-source: url('@/assets/img/UI/UI_TheatreMechanicus_EntryPage_Img4.webp');
+  border-image-slice: 60 fill;
+  border-image-width: 45px;
 }
 
 .filter-toggle {
   flex: none;
   width: 44px;
   height: 44px;
+  margin-left: 5px;
   border: none;
-  border-radius: 12px;
-  background-color: var(--clr-white-10);
-  background-image: url('@/assets/img/icon-filter-expand.svg');
+  background-color: transparent;
+  background-image: url('@/assets/img/UI/UI_Btn_Filter_expand.svg');
   background-size: 55%;
   background-position: center;
   background-repeat: no-repeat;
@@ -66,36 +75,27 @@ defineEmits(['update:modelValue', 'update:open'])
   transition: 150ms;
 }
 
-.filter-toggle:hover {
-  background-color: var(--clr-white-20);
-}
-
 .filter-toggle.open {
-  background-image: url('@/assets/img/icon-filter-collapse.svg');
-  background-color: var(--clr-white-20);
+  background-image: url('@/assets/img/UI/UI_Btn_Filter_collapse.svg');
 }
 
 .filter-input {
   flex: 1;
   min-width: 0;
   height: 44px;
-  padding: 0 16px;
   border: none;
-  border-radius: 12px;
-  background-color: var(--clr-transparent);
-  color: var(--clr-white);
+  background-color: transparent;
+  color: #333333;
   font-family: inherit;
   font-size: 16px;
   letter-spacing: 1px;
-  transition: 150ms;
 }
 
 .filter-input::placeholder {
-  color: var(--clr-white-50);
+  color: #606060;
 }
 
 .filter-input:focus {
   outline: none;
-  background-color: var(--clr-white-10);
 }
 </style>

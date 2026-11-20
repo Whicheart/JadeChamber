@@ -1,8 +1,7 @@
 <script setup>
-import { asset } from '@/utils/getImage'
+import { uiAsset } from '@/utils/getImage'
 
 // 筛选面板：按分组渲染按钮
-// 有 iconName 的用筛选器图标（mask 着色），没有的当文字胶囊用
 defineProps({
   open: {
     type: Boolean,
@@ -15,16 +14,6 @@ defineProps({
 })
 
 defineEmits(['toggle'])
-
-function buttonStyle(button) {
-  const style = { '--active-color': button.color || 'var(--clr-white)' }
-  if (!button.iconName) return style
-
-  const url = `url("${asset(button.iconName)}")`
-  style.maskImage = url
-  style.WebkitMaskImage = url
-  return style
-}
 </script>
 
 <template>
@@ -39,14 +28,18 @@ function buttonStyle(button) {
             :key="button.id"
             type="button"
             class="filter-btn"
-            :class="{ active: button.active, 'text-btn': !button.iconName }"
-            :style="buttonStyle(button)"
-            :aria-label="button.label || undefined"
+            :class="{ active: button.active }"
+            :aria-label="button.label"
             :aria-pressed="button.active"
-            :title="button.label || undefined"
+            :title="button.label"
             @click="$emit('toggle', group.id, button.id)"
           >
-            {{ button.iconName ? '' : button.label }}
+            <img
+              class="filter-icon"
+              :src="uiAsset(button.active ? button.activeIconName : button.iconName)"
+              :alt="button.label"
+              draggable="false"
+            />
           </button>
         </div>
       </section>
@@ -56,28 +49,37 @@ function buttonStyle(button) {
 
 <style scoped>
 .filter-panel {
+  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 24px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 16px;
-  background-color: var(--clr-black-80);
+  padding: 20px 64px 30px 64px;
 }
 
-/* 展开 / 收起：淡入淡出 + 从上方落位，纯视觉，不占文档流高度 */
+.filter-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 0 solid transparent;
+  border-image-source: url('@/assets/img/UI/UI_TheatreMechanicus_EntryPage_Img3.webp');
+  border-image-slice: 50% 64 50% 160 fill;
+  border-image-width: 50% 40px 50% 60px;
+}
+
+/* 展开 / 收起：淡入淡出 */
 .filter-panel-enter-active,
 .filter-panel-leave-active {
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity 150ms ease,
+    transform 150ms ease;
 }
 
 .filter-panel-enter-from,
 .filter-panel-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-10px);
 }
 
 /* 用户关闭动效时直接显示 */
@@ -90,7 +92,7 @@ function buttonStyle(button) {
 
 .filter-title {
   margin-bottom: 10px;
-  color: var(--clr-white-70);
+  color: #333333;
   font-size: 15px;
   font-weight: normal;
   letter-spacing: 2px;
@@ -103,65 +105,57 @@ function buttonStyle(button) {
 }
 
 .filter-btn {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--clr-white-10);
-  border-radius: 12px;
-  background-color: var(--clr-white-60);
-  mask-size: 80%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 80%;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-image: url('@/assets/img/UI/UI_BtnBg_Filter.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
   cursor: pointer;
   transition: 150ms;
 }
 
-/* 星级用文字按钮：比 mask 图标窄，需要额外的内边距与文字样式 */
-.filter-btn.text-btn {
-  width: auto;
-  min-width: 62px;
-  padding: 0 14px;
-  background-color: var(--clr-white-10);
-  color: var(--clr-white-60);
-  font-family: inherit;
-  font-size: 15px;
-  letter-spacing: 1px;
-}
-
-.filter-btn.text-btn:hover {
-  background-color: var(--clr-white-20);
-  color: var(--clr-white);
-}
-
 .filter-btn.active {
-  background-color: var(--active-color);
-  box-shadow:
-    0 0 6px var(--active-color),
-    0 0 16px var(--active-color);
+  background-image: url('@/assets/img/UI/UI_BtnBg_Filter_Selected.webp');
+  transform: scale(1.15);
 }
 
-.filter-btn.text-btn.active {
-  color: var(--clr-black);
-  font-weight: bold;
+.filter-btn:active {
+  transform: scale(0.96);
+}
+
+.filter-btn:focus-visible {
+  outline: 2px solid var(--clr-white-60);
+  outline-offset: 2px;
+}
+
+.filter-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
   .filter-panel {
-    padding: 16px;
+    padding: 20px 64px 30px 64px;
     gap: 14px;
   }
 
   .filter-btn {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
   }
 
-  .filter-btn.text-btn {
-    min-width: 54px;
-    padding: 0 10px;
-    font-size: 14px;
+  .filter-icon {
+    width: 28px;
+    height: 28px;
   }
 }
 </style>
