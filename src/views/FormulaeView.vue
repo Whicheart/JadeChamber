@@ -44,22 +44,30 @@ onUpdated(renderMath)
       <div class="panel-title">防御力 抗性</div>
       <div class="panel-body">
         <p>抗性通用公式：</p>
-        $$抗性系数 = \begin{cases} 1 - \frac{抗性}{2} & \text{抗性} \leq 0 \\ 1 - 抗性 & 0 \leq
-        \text{抗性} \leq 75\% \\ \frac{1}{4 \times 抗性 + 1} & 75\% \leq \text{抗性} \end{cases}$$
+        <div class="formulae">
+          $$抗性系数 = \begin{cases} 1 - \frac{抗性}{2} & \text{抗性} \leq 0 \\ 1 - 抗性 & 0 \leq
+          \text{抗性} \leq 75\% \\ \frac{1}{4 \times 抗性 + 1} & 75\% \leq \text{抗性} \end{cases}$$
+        </div>
         <p>角色攻击敌人时的防御系数</p>
-        $$防御系数 = \frac{角色等级 + 100}{(角色等级 + 100) + (敌人等级 + 100) \times (1 - 减防)
-        \times (1 - 无视防御)}$$
+        <div class="formulae">
+          $$防御系数 = \frac{角色等级 + 100}{(角色等级 + 100) + (敌人等级 + 100) \times (1 - 减防)
+          \times (1 - 无视防御)}$$
+        </div>
         <p>来自角色的减防不能超过90%，无视防御不能超过100%</p>
         <p>敌人攻击角色时的防御系数</p>
-        $$防御系数 = \frac{5 \times 敌人等级 + 500}{5 \times 敌人等级 + 500 + 角色防御}$$
+        <div class="formulae">
+          $$防御系数 = \frac{5 \times 敌人等级 + 500}{5 \times 敌人等级 + 500 + 角色防御}$$
+        </div>
       </div>
     </div>
     <div class="panel">
       <div class="panel-title">常规伤害</div>
       <div class="panel-body">
         <p>角色造成的常规伤害：</p>
-        $$最终伤害 = (基础值 + 激化值 + 基础值加成) \times (1 + 增伤\% + 易伤\% - 减伤\%) \times
-        抗性系数 \times 防御系数 \times 暴击区 \times 蒸发融化系数$$
+        <div class="formulae">
+          $$最终伤害 = (基础值 + 激化值 + 基础值加成) \times (1 + 增伤\% + 易伤\% - 减伤\%) \times
+          抗性系数 \times 防御系数 \times 暴击区 \times 蒸发融化系数$$
+        </div>
         <p>注：若攻击没有出现伤害数字（例如命中护盾等），则本次伤害不会计算蒸发融化系数</p>
         <p>基础值：$角色模板（如攻击力、生命值、防御力、元素精通） \times 技能倍率$</p>
         <p>基础值加成：描述中带有【造成的伤害提高X】的效果</p>
@@ -75,9 +83,11 @@ onUpdated(renderMath)
       <div class="panel-body">
         <p>月反应伤害无视敌方防御力</p>
         <p>月反应直伤伤害计算公式：</p>
-        $$直伤基础 = 直伤基础倍率 \times 基础值 \times (1 + 基础提升\%) \times (1 + \frac{6 \times
-        元素精通}{元素精通 + 2000} + 反应增伤\%)$$ $$最终直伤 = (直伤基础 + 额外提升) \times
-        抗性系数 \times 暴击区 \times 擢升$$
+        <div class="formulae">
+          $$直伤基础 = 直伤基础倍率 \times 基础值 \times (1 + 基础提升\%) \times (1 + \frac{6 \times
+          元素精通}{元素精通 + 2000} + 反应增伤\%)$$ $$最终直伤 = (直伤基础 + 额外提升) \times
+          抗性系数 \times 暴击区 \times 擢升$$
+        </div>
         <p>直伤基础倍率：</p>
         <p>- 月感电 3</p>
         <p>- 月结晶 1.6</p>
@@ -85,10 +95,12 @@ onUpdated(renderMath)
         <p>基础提升：如角色天赋14%</p>
         <p>额外提升：如兹白天赋「太阴降」效果</p>
         <p>月反应反应伤害计算公式：</p>
-        $$反应伤害 = 1446.85 \times 反应基础倍率 \times (1 + 基础提升\%) \times (1 + \frac{6 \times
-        元素精通}{元素精通 + 2000} + 反应增伤\%) \times 抗性系数 \times 暴击区 \times 擢升$$
-        $$最终伤害 = 伤害最高角色 + \frac{1}{2}第二高角色 + \frac{1}{12}第三高角色 +
-        \frac{1}{12}第四高角色$$
+        <div class="formulae">
+          $$反应伤害 = 1446.85 \times 反应基础倍率 \times (1 + 基础提升\%) \times (1 + \frac{6
+          \times 元素精通}{元素精通 + 2000} + 反应增伤\%) \times 抗性系数 \times 暴击区 \times
+          擢升$$ $$最终伤害 = 伤害最高角色 + \frac{1}{2}第二高角色 + \frac{1}{12}第三高角色 +
+          \frac{1}{12}第四高角色$$
+        </div>
         <p>反应基础倍率：</p>
         <p>- 月感电 1.8</p>
         <p>- 月结晶 0.96</p>
@@ -114,9 +126,11 @@ onUpdated(renderMath)
           当附着雷/草元素的攻击命中具有原激化的目标时，将分别引发超激化/蔓激化反应，不消耗任何元素，但为本次伤害贡献激化值（完整公式见【常规伤害】章节）
         </p>
         <p>超激化/蔓激化伤害计算公式：</p>
-        $$超激化值 = 1446.85 \times 1.15 \times (1 + \frac{5 \times 元素精通}{元素精通 + 1200} +
-        超激化提高\%)$$ $$蔓激化值 = 1446.85 \times 1.25 \times (1 + \frac{5 \times
-        元素精通}{元素精通 + 1200} + 蔓激化提高\%)$$
+        <div class="formulae">
+          $$超激化值 = 1446.85 \times 1.15 \times (1 + \frac{5 \times 元素精通}{元素精通 + 1200} +
+          超激化提高\%)$$ $$蔓激化值 = 1446.85 \times 1.25 \times (1 + \frac{5 \times
+          元素精通}{元素精通 + 1200} + 蔓激化提高\%)$$
+        </div>
         <p>当敌人触发上述反应时，原本的 1446.85 的数值有变化：见【剧变反应】章节</p>
       </div>
     </div>
@@ -125,8 +139,10 @@ onUpdated(renderMath)
       <div class="panel-body">
         <p>剧变反应包括：超载、超导、感电、燃烧、碎冰、扩散、绽放、超绽放、烈绽放</p>
         <p>剧变反应造成的伤害不受益于常规增伤/易伤/减伤，且无视防御力、不能暴击</p>
-        $$剧变基础 = 1446.85 \times 反应倍率 \times (1 + \frac{16 \times 元素精通}{元素精通 + 2000}
-        + 反应增伤\%)$$ $$最终伤害 = (剧变基础 + 额外提升) \times 抗性系数$$
+        <div class="formulae">
+          $$剧变基础 = 1446.85 \times 反应倍率 \times (1 + \frac{16 \times 元素精通}{元素精通 +
+          2000} + 反应增伤\%)$$ $$最终伤害 = (剧变基础 + 额外提升) \times 抗性系数$$
+        </div>
         <p>额外提升：梦见月瑞希1命、菈乌玛元素爆发（不受益于精通增伤、反应增伤）</p>
         <p>反应倍率：</p>
         <p>- 燃烧 0.25（每 0.25s 一次）</p>
@@ -154,8 +170,10 @@ onUpdated(renderMath)
         <p>增幅反应包括：蒸发、融化</p>
         <p>触发增幅反应时，会为本次伤害附加蒸发融化系数（完整公式见【常规伤害】章节）</p>
         <p>若攻击没有出现伤害数字（例如命中护盾），则本次伤害不会计算蒸发融化系数</p>
-        $$蒸发融化系数 = 基础系数 \times (1 + \frac{2.78 \times 元素精通}{元素精通 + 1400} +
-        反应增伤\%)$$
+        <div class="formulae">
+          $$蒸发融化系数 = 基础系数 \times (1 + \frac{2.78 \times 元素精通}{元素精通 + 1400} +
+          反应增伤\%)$$
+        </div>
         <p>基础系数：</p>
         <p>- $水 \to \text{火 蒸发 2.0}$</p>
         <p>- $火 \to \text{水 蒸发 1.5}$</p>
@@ -168,7 +186,9 @@ onUpdated(renderMath)
       <div class="panel-body">
         <p>触发结晶反应时，会掉落对应火/水/雷/冰元素的晶片，拾取后可获得护盾</p>
         <p>结晶护盾对其自身属性的伤害有 250% 的吸收效率</p>
-        $$结晶盾量 = 1851.06 \times (1 + \frac{4.44 \times 元素精通}{元素精通 + 1400})$$
+        <div class="formulae">
+          $$结晶盾量 = 1851.06 \times (1 + \frac{4.44 \times 元素精通}{元素精通 + 1400})$$
+        </div>
         <p>
           角色具有护盾时，护盾量还会受护盾强效影响，护盾强效取决于持有护盾的角色，而非创造晶片的角色
         </p>
@@ -219,9 +239,12 @@ onUpdated(renderMath)
 .panel-body p + p {
   margin-top: 6px;
 }
-/* 公式块上下留白，避免与正文挤在一起 */
-.panel-body :deep(.katex-display) {
+.formulae {
   margin: 12px 0;
+  padding: 12px;
+}
+.panel-body :deep(.katex-display) {
+  margin: 24px 0;
   color: var(--clr-white);
 }
 .end {
@@ -258,9 +281,8 @@ onUpdated(renderMath)
 
   /* 行间公式普遍长于手机宽度，允许单独横向滚动，不撑破面板 */
   .panel-body :deep(.katex-display) {
-    margin: 10px 0;
+    margin: 12px 0;
     overflow-x: auto;
-    overflow-y: hidden;
   }
 
   .panel-body :deep(.katex) {
