@@ -2,6 +2,13 @@
 
 原神（Genshin Impact）百科与工具前端项目。
 
+## 主要功能
+
+- 角色列表：以卡片展示角色立绘与名称。
+- 名称搜索：按角色名称筛选，支持清空与回车立即查询。
+- 条件筛选：按元素、武器类型、星级筛选，支持多选组合。
+- 响应式布局：适配桌面端与移动端。
+
 ## 技术栈
 
 - Vue 3（Composition API）
@@ -28,6 +35,7 @@
 | `npm run build` | 类型检查并构建生产版本 |
 | `npm run preview` | 预览生产构建 |
 | `npm run type-check` | 执行 TypeScript 类型检查 |
+| `npm run lint` | 使用 ESLint 检查 `src/` |
 | `npm run test:unit` | 运行单元测试 |
 | `npm run format` | 使用 Prettier 格式化 `src/` |
 
