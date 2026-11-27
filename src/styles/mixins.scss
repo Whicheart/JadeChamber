@@ -1,0 +1,29 @@
+@use 'sass:map';
+@use './variables' as variables;
+
+$breakpoints: (
+  sm: variables.$breakpoint-sm,
+  md: variables.$breakpoint-md,
+  lg: variables.$breakpoint-lg,
+  xl: variables.$breakpoint-xl,
+);
+
+// 移动优先的媒体查询：在指定断点及以上生效。
+@mixin media-up($name) {
+  $width: map.get($breakpoints, $name);
+
+  @if $width == null {
+    @error '未知断点 `#{$name}`，可选值：#{map.keys($breakpoints)}';
+  }
+
+  @media (min-width: $width) {
+    @content;
+  }
+}
+
+// 单行文本溢出省略。
+@mixin truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

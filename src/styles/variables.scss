@@ -1,0 +1,120 @@
+// 设计令牌：运行时值以 CSS 自定义属性定义，SCSS 变量仅做桥接与编译期常量。
+:root {
+  // 颜色：深色基底 + 金色点缀
+  --color-bg-base: #0d1520;
+  --color-bg-raised: #141f2e;
+  --color-bg-overlay: rgba(13, 21, 32, 0.88);
+  --color-text-primary: #ece5d8;
+  --color-text-secondary: #b8b0a2;
+  --color-text-muted: #7d766b;
+  --color-accent: #d3a95c;
+  --color-accent-strong: #f0c86a;
+  --color-accent-soft: rgba(211, 169, 92, 0.16);
+  --color-border: rgba(211, 169, 92, 0.22);
+  --color-success: #5fbf8a;
+  --color-warning: #e0b65c;
+  --color-danger: #d96a6a;
+
+  // 字体
+  --font-family-base:
+    'HYWenHei', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system,
+    sans-serif;
+  --font-family-title: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 36px;
+  --line-height-tight: 1.25;
+  --line-height-base: 1.6;
+  --line-height-loose: 1.8;
+
+  // 间距
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  // 圆角
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  // 阴影
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 12px rgba(211, 169, 92, 0.25);
+
+  // 边框与过渡
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+
+  // 层级
+  --z-index-header: 100;
+  --z-index-overlay: 900;
+  --z-index-modal: 1000;
+  --z-index-toast: 1100;
+}
+
+// 断点：媒体查询无法使用 CSS 变量，保留编译期常量供 mixins 使用。
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// SCSS 桥接：组件可直接以 $color-xxx 等形式引用令牌。
+$color-bg-base: var(--color-bg-base);
+$color-bg-raised: var(--color-bg-raised);
+$color-bg-overlay: var(--color-bg-overlay);
+$color-text-primary: var(--color-text-primary);
+$color-text-secondary: var(--color-text-secondary);
+$color-text-muted: var(--color-text-muted);
+$color-accent: var(--color-accent);
+$color-accent-strong: var(--color-accent-strong);
+$color-accent-soft: var(--color-accent-soft);
+$color-border: var(--color-border);
+$color-success: var(--color-success);
+$color-warning: var(--color-warning);
+$color-danger: var(--color-danger);
+
+$font-family-base: var(--font-family-base);
+$font-family-title: var(--font-family-title);
+$font-size-xs: var(--font-size-xs);
+$font-size-sm: var(--font-size-sm);
+$font-size-base: var(--font-size-base);
+$font-size-lg: var(--font-size-lg);
+$font-size-xl: var(--font-size-xl);
+$font-size-2xl: var(--font-size-2xl);
+$font-size-3xl: var(--font-size-3xl);
+
+$space-1: var(--space-1);
+$space-2: var(--space-2);
+$space-3: var(--space-3);
+$space-4: var(--space-4);
+$space-5: var(--space-5);
+$space-6: var(--space-6);
+$space-7: var(--space-7);
+$space-8: var(--space-8);
+
+$radius-sm: var(--radius-sm);
+$radius-md: var(--radius-md);
+$radius-lg: var(--radius-lg);
+$radius-full: var(--radius-full);
+
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-glow: var(--shadow-glow);
+
+$transition-fast: var(--transition-fast);
+$transition-base: var(--transition-base);
