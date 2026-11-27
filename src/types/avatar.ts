@@ -12,6 +12,18 @@ export interface AvatarBrief {
   gachaIconName?: string
 }
 
+/**
+ * 角色列表查询参数。
+ * 依据 GET /api/avatar/list：name 为包含匹配；elements、weaponTypes、qualityTypes
+ * 为组内 OR、组间 AND，数组以逗号分隔字符串传递。
+ */
+export interface AvatarListParams {
+  name?: string
+  elements?: string[]
+  weaponTypes?: string[]
+  qualityTypes?: string[]
+}
+
 /** 生日 */
 export interface Birth {
   month?: number
