@@ -1,0 +1,58 @@
+# JadeChamber
+
+原神（Genshin Impact）百科与工具前端项目。
+
+## 技术栈
+
+- Vue 3（Composition API）
+- Vite
+- TypeScript（strict）
+- SCSS
+- Vue Router
+- Pinia
+- Axios
+- ESLint + Prettier
+- Vitest + Vue Test Utils
+
+## 环境要求
+
+- Node.js LTS（`^22.18.0 || >=24.12.0`）
+- npm
+
+## 常用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `npm install` | 安装依赖 |
+| `npm run dev` | 启动开发服务器 |
+| `npm run build` | 类型检查并构建生产版本 |
+| `npm run preview` | 预览生产构建 |
+| `npm run type-check` | 执行 TypeScript 类型检查 |
+| `npm run test:unit` | 运行单元测试 |
+| `npm run format` | 使用 Prettier 格式化 `src/` |
+
+## 后端接口
+
+开发前需确认后端已启动：
+
+- Swagger UI：<http://localhost:8080/swagger-ui/index.html>
+- OpenAPI JSON：<http://localhost:8080/v3/api-docs>
+
+## 目录结构
+
+```text
+src/
+├── api/          # HTTP 请求与接口封装
+├── assets/       # 静态资源
+├── components/   # 通用组件
+├── composables/  # 组合式逻辑
+├── layouts/      # 页面级布局
+├── router/       # 路由
+├── stores/       # Pinia Store
+├── styles/       # 全局样式与设计变量
+├── types/        # TypeScript 类型
+├── utils/        # 通用工具
+├── views/        # 页面级组件
+├── App.vue
+└── main.ts
+```
