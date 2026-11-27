@@ -16,10 +16,7 @@
   --color-danger: #d96a6a;
 
   // 字体
-  --font-family-base:
-    'HYWenHei', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system,
-    sans-serif;
-  --font-family-title: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-family-base: 'HYWenHei-85W', system-ui, sans-serif;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-base: 16px;
@@ -88,7 +85,6 @@ $color-warning: var(--color-warning);
 $color-danger: var(--color-danger);
 
 $font-family-base: var(--font-family-base);
-$font-family-title: var(--font-family-title);
 $font-size-xs: var(--font-size-xs);
 $font-size-sm: var(--font-size-sm);
 $font-size-base: var(--font-size-base);

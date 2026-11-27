@@ -26,3 +26,15 @@ a {
     color: var(--color-accent-strong);
   }
 }
+
+// 尊重系统减少动态效果设置：关闭或减弱非必要动画，不影响基本功能。
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
