@@ -49,8 +49,6 @@ http.interceptors.response.use(
       ? `请求失败（${target}）：${error.message}`
       : `请求失败：${error.message}`
 
-    return Promise.reject(
-      new ApiError(message, { status, method, url, originalError: error }),
-    )
+    return Promise.reject(new ApiError(message, { status, method, url, originalError: error }))
   },
 )
