@@ -9,6 +9,7 @@ const terms: Record<string, string> = {
   dmgReduction: '描述中带有「目标受到的伤害降低 x%」的效果。',
   aggravate: '见「激化反应」章节。',
   amplify: '见「增幅反应」章节。',
+  amplifyBase: '水 → 火 蒸发 2.0\n火 → 水 蒸发 1.5\n火 → 冰 融化 2.0\n冰 → 火 融化 1.5',
 }
 
 const finalDamageLatex = String.raw`\begin{aligned}
@@ -16,6 +17,18 @@ const finalDamageLatex = String.raw`\begin{aligned}
 &\times (1 + \htmlData{term=dmgBonus}{\text{增伤}}\% + \htmlData{term=vulnBonus}{\text{易伤}}\% - \htmlData{term=dmgReduction}{\text{减伤}}\%) \\
 &\times \text{抗性系数} \times \text{防御系数} \times \text{暴击区} \times \htmlData{term=amplify}{\text{蒸发融化系数}}
 \end{aligned}`
+
+const resistanceLatex = String.raw`\text{抗性系数} = \begin{cases}
+1 - \frac{\text{抗性}}{2} & \text{抗性} \leq 0 \\
+1 - \text{抗性} & 0 \leq \text{抗性} \leq 75\% \\
+\frac{1}{4 \times \text{抗性} + 1} & 75\% \leq \text{抗性}
+\end{cases}`
+
+const defenseAttackLatex = String.raw`\text{防御系数} = \frac{\text{角色等级} + 100}{(\text{角色等级} + 100) + (\text{敌人等级} + 100) \times (1 - \text{减防}) \times (1 - \text{无视防御})}`
+
+const defenseDefendLatex = String.raw`\text{防御系数} = \frac{5 \times \text{敌人等级} + 500}{5 \times \text{敌人等级} + 500 + \text{角色防御}}`
+
+const amplifyLatex = String.raw`\text{蒸发融化系数} = \htmlData{term=amplifyBase}{\text{基础系数}} \times \left(1 + \frac{2.78 \times \text{元素精通}}{\text{元素精通} + 1400} + \text{反应增伤}\%\right)`
 </script>
 
 <template>
@@ -28,6 +41,23 @@ const finalDamageLatex = String.raw`\begin{aligned}
       <p class="damage-formula__note">
         注：若攻击没有出现伤害数字（例如命中护盾等），则本次伤害不会计算蒸发融化系数。
       </p>
+    </section>
+
+    <section class="damage-formula__section">
+      <h2 class="damage-formula__heading">防御与抗性</h2>
+      <p class="damage-formula__caption">抗性通用公式：</p>
+      <FormulaBlock :latex="resistanceLatex" />
+      <p class="damage-formula__caption">角色攻击敌人时：</p>
+      <FormulaBlock :latex="defenseAttackLatex" />
+      <p class="damage-formula__caption">敌人攻击角色时：</p>
+      <FormulaBlock :latex="defenseDefendLatex" />
+      <p class="damage-formula__note">注：来自角色的减防不能超过 90%，无视防御不能超过 100%。</p>
+    </section>
+
+    <section class="damage-formula__section">
+      <h2 class="damage-formula__heading">增幅反应</h2>
+      <p class="damage-formula__note">增幅反应包括：蒸发、融化</p>
+      <FormulaBlock :latex="amplifyLatex" :terms="terms" />
     </section>
   </article>
 </template>
@@ -56,6 +86,10 @@ const finalDamageLatex = String.raw`\begin{aligned}
 .damage-formula__heading {
   color: $color-text-primary;
   font-size: $font-size-xl;
+}
+
+.damage-formula__caption {
+  color: $color-text-secondary;
 }
 
 .damage-formula__note {
