@@ -26,3 +26,9 @@ export interface MonsterBaseInfoResponse {
   physicalSubHurt?: number
   iconName?: string
 }
+
+/** 怪物列表查询参数。 */
+export interface MonsterListParams {
+  name?: string
+  types?: string[]
+}

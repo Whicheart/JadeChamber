@@ -28,3 +28,10 @@ export interface WeaponBaseInfoResponse {
   materials?: Material[]
   stories?: string[][]
 }
+
+/** 武器列表查询参数。 */
+export interface WeaponListParams {
+  name?: string
+  weaponTypes?: string[]
+  ranks?: number[]
+}

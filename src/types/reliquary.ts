@@ -49,3 +49,9 @@ export interface RankLevel {
 export interface ReliquaryPropRankResponse {
   rankLevels?: RankLevel[]
 }
+
+/** 圣遗物套装列表查询参数。 */
+export interface ReliquaryListParams {
+  name?: string
+  ranks?: number[]
+}
