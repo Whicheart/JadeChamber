@@ -5,7 +5,12 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 const route = useRoute()
 const drawerOpen = ref(false)
 
-const navItems = [{ label: '角色', to: '/avatars' }]
+const navItems = [
+  { label: '角色', to: '/avatars' },
+  { label: '武器', to: '/weapons' },
+  { label: '圣遗物', to: '/reliquaries' },
+  { label: '敌对生物', to: '/monsters' },
+]
 
 watch(
   () => route.fullPath,
