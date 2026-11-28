@@ -83,23 +83,22 @@ export const weaponOptions: FilterButtonConfig[] = weaponOrder.map((key) => {
   }
 })
 
-/** 星级筛选按钮：仅 4 星与 5 星（当前数据只有这两档）。 */
-export const qualityOptions: FilterButtonConfig[] = [4, 5].map((star) => {
-  const pair = iconPair('Quality', String(star))
-  return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
-})
+/** 按传入的星级集合生成筛选按钮，数组顺序即展示顺序。 */
+function buildRankOptions(stars: readonly number[]): FilterButtonConfig[] {
+  return stars.map((star) => {
+    const pair = iconPair('Quality', String(star))
+    return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
+  })
+}
 
-/** 武器星级筛选按钮：1–5 星（武器数据覆盖全部星级）。 */
-export const weaponRankOptions: FilterButtonConfig[] = [1, 2, 3, 4, 5].map((star) => {
-  const pair = iconPair('Quality', String(star))
-  return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
-})
+/** 角色星级筛选按钮：仅 4 星与 5 星。 */
+export const qualityOptions = buildRankOptions([5, 4])
 
-/** 圣遗物星级筛选按钮：3–5 星（数据只有这三档）。 */
-export const relicRankOptions: FilterButtonConfig[] = [3, 4, 5].map((star) => {
-  const pair = iconPair('Quality', String(star))
-  return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
-})
+/** 武器星级筛选按钮：1–5 星。 */
+export const weaponRankOptions = buildRankOptions([5, 4, 3, 2, 1])
+
+/** 圣遗物星级筛选按钮：3–5 星。 */
+export const relicRankOptions = buildRankOptions([5, 4, 3])
 
 const monsterKeys = [
   'Elemental',
