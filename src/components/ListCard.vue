@@ -6,6 +6,7 @@ const props = withDefaults(
     name: string
     image?: string
     mobileImage?: string
+    background?: string
     ratio?: number
     fit?: 'cover' | 'contain'
     position?: string
@@ -30,7 +31,10 @@ const mobileSource = computed(() => {
   return props.mobileImage ?? props.image
 })
 
-const mediaStyle = computed(() => ({ '--card-ratio': String(props.ratio) }))
+const mediaStyle = computed(() => ({
+  '--card-ratio': String(props.ratio),
+  backgroundImage: props.background ? `url("${props.background}")` : undefined,
+}))
 </script>
 
 <template>
@@ -93,7 +97,10 @@ const mediaStyle = computed(() => ({ '--card-ratio': String(props.ratio) }))
   justify-content: center;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: linear-gradient(160deg, rgba(211, 169, 92, 0.12), transparent 55%);
+  background-image: linear-gradient(160deg, rgba(211, 169, 92, 0.12), transparent 55%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 @include media-up('md') {
