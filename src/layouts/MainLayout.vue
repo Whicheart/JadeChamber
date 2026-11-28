@@ -23,6 +23,7 @@ const navGroups: NavGroup[] = [
       { label: '武器', to: '/weapons' },
       { label: '圣遗物', to: '/reliquaries' },
       { label: '敌对生物', to: '/monsters' },
+      { label: '伤害公式', to: '/damage-formula' },
     ],
   },
 ]
