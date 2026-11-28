@@ -16,6 +16,21 @@ const router = createRouter({
           component: () => import('../views/AvatarListView.vue'),
         },
         {
+          path: 'weapons',
+          name: 'weapons',
+          component: () => import('../views/WeaponListView.vue'),
+        },
+        {
+          path: 'reliquaries',
+          name: 'reliquaries',
+          component: () => import('../views/ReliquaryListView.vue'),
+        },
+        {
+          path: 'monsters',
+          name: 'monsters',
+          component: () => import('../views/MonsterListView.vue'),
+        },
+        {
           path: ':pathMatch(.*)*',
           name: 'not-found',
           component: () => import('../views/NotFoundView.vue'),
