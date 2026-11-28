@@ -103,8 +103,14 @@ const emit = defineEmits<{
 
 .list-layout__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: $space-3;
+}
+
+@include media-up('sm') {
+  .list-layout__grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
 }
 
 @include media-up('md') {
