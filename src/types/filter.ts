@@ -27,10 +27,12 @@ export interface ListCardItem {
   image?: string
   /** 移动端图片 */
   mobileImage?: string
-  /** 图片宽高比，默认 3/4 */
+  /** 图片区背景图 URL */
+  background?: string
+  /** 图片宽高比，默认 1/2.2 */
   ratio?: number
   /** 图片填充方式，默认 cover */
   fit?: 'cover' | 'contain'
-  /** object-position，默认 center top */
+  /** object-position，默认 center center */
   position?: string
 }
