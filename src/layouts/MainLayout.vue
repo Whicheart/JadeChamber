@@ -5,11 +5,26 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 const route = useRoute()
 const drawerOpen = ref(false)
 
-const navItems = [
-  { label: '角色', to: '/avatars' },
-  { label: '武器', to: '/weapons' },
-  { label: '圣遗物', to: '/reliquaries' },
-  { label: '敌对生物', to: '/monsters' },
+interface NavItem {
+  label: string
+  to: string
+}
+
+interface NavGroup {
+  name: string
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    name: '百科',
+    items: [
+      { label: '角色', to: '/avatars' },
+      { label: '武器', to: '/weapons' },
+      { label: '圣遗物', to: '/reliquaries' },
+      { label: '敌对生物', to: '/monsters' },
+    ],
+  },
 ]
 
 watch(
@@ -34,16 +49,19 @@ function closeDrawer() {
     <aside id="main-sidebar" class="main-layout__sidebar" :class="{ 'is-open': drawerOpen }">
       <div class="main-layout__brand main-layout__brand--sidebar">JadeChamber</div>
       <nav class="main-layout__nav">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="main-layout__link"
-          active-class="is-active"
-          @click="closeDrawer"
-        >
-          {{ item.label }}
-        </RouterLink>
+        <section v-for="group in navGroups" :key="group.name" class="main-layout__group">
+          <p class="main-layout__group-name">{{ group.name }}</p>
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            class="main-layout__link"
+            active-class="is-active"
+            @click="closeDrawer"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </section>
       </nav>
     </aside>
 
@@ -119,8 +137,21 @@ function closeDrawer() {
 .main-layout__nav {
   display: flex;
   flex-direction: column;
-  gap: $space-1;
+  gap: $space-4;
   padding: $space-2;
+}
+
+.main-layout__group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.main-layout__group-name {
+  padding: 0 $space-4;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  letter-spacing: 0.08em;
 }
 
 .main-layout__link {
