@@ -59,7 +59,7 @@ const weaponKeyByType: Record<string, (typeof weaponOrder)[number]> = {
   WEAPON_CATALYST: 'Catalyst',
 }
 
-function iconPair(group: 'Element' | 'Weapon' | 'Quality', key: string): IconPair {
+function iconPair(group: string, key: string): IconPair {
   return {
     default: iconUrlMap.get(`UI_BtnIcon_${group}_${key}`),
     active: iconUrlMap.get(`UI_BtnIcon_Active_${group}_${key}`),
@@ -87,4 +87,60 @@ export const weaponOptions: FilterButtonConfig[] = weaponOrder.map((key) => {
 export const qualityOptions: FilterButtonConfig[] = [4, 5].map((star) => {
   const pair = iconPair('Quality', String(star))
   return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
+})
+
+/** 武器星级筛选按钮：1–5 星（武器数据覆盖全部星级）。 */
+export const weaponRankOptions: FilterButtonConfig[] = [1, 2, 3, 4, 5].map((star) => {
+  const pair = iconPair('Quality', String(star))
+  return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
+})
+
+/** 圣遗物星级筛选按钮：3–5 星（数据只有这三档）。 */
+export const relicRankOptions: FilterButtonConfig[] = [3, 4, 5].map((star) => {
+  const pair = iconPair('Quality', String(star))
+  return { label: `${star} 星`, value: String(star), icon: pair.default, activeIcon: pair.active }
+})
+
+const monsterKeys = [
+  'Elemental',
+  'Hilichurl',
+  'Abyss',
+  'Fatui',
+  'Automatron',
+  'Human',
+  'Beast',
+  'Boss',
+] as const
+
+const monsterLabels: Record<(typeof monsterKeys)[number], string> = {
+  Elemental: '元素生物',
+  Hilichurl: '丘丘人',
+  Abyss: '深渊',
+  Fatui: '愚人众',
+  Automatron: '机关',
+  Human: '人类',
+  Beast: '野兽',
+  Boss: '首领',
+}
+
+const monsterTypeByKey: Record<(typeof monsterKeys)[number], string> = {
+  Elemental: 'CODEX_SUBTYPE_ELEMENTAL',
+  Hilichurl: 'CODEX_SUBTYPE_HILICHURL',
+  Abyss: 'CODEX_SUBTYPE_ABYSS',
+  Fatui: 'CODEX_SUBTYPE_FATUI',
+  Automatron: 'CODEX_SUBTYPE_AUTOMATRON',
+  Human: 'CODEX_SUBTYPE_HUMAN',
+  Beast: 'CODEX_SUBTYPE_BEAST',
+  Boss: 'CODEX_SUBTYPE_BOSS',
+}
+
+/** 怪物类型筛选按钮（value 为接口 type 枚举）。 */
+export const monsterTypeOptions: FilterButtonConfig[] = monsterKeys.map((key) => {
+  const pair = iconPair('Monster', key)
+  return {
+    label: monsterLabels[key],
+    value: monsterTypeByKey[key],
+    icon: pair.default,
+    activeIcon: pair.active,
+  }
 })
