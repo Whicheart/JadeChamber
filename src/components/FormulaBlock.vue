@@ -190,7 +190,7 @@ onBeforeUnmount(() => {
       @mouseenter="clearHideTimer"
       @mouseleave="scheduleHide"
     >
-      {{ activeTip }}
+      <p class="formula-tooltip__line">{{ activeTip }}</p>
     </div>
   </Teleport>
 </template>
@@ -248,6 +248,9 @@ onBeforeUnmount(() => {
 .formula-tooltip {
   position: fixed;
   z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
   max-width: 300px;
   padding: $space-2 $space-3;
   color: $color-text-primary;
@@ -257,5 +260,10 @@ onBeforeUnmount(() => {
   border: 1px solid $color-accent-soft;
   border-radius: $radius-md;
   box-shadow: $shadow-lg;
+}
+
+.formula-tooltip__line {
+  margin: 0;
+  white-space: pre-line;
 }
 </style>
