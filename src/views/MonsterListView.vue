@@ -1,30 +1,40 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { getMonsterList } from '../api/monster'
 import FilterPanel from '../components/FilterPanel.vue'
 import FilterToggleButton from '../components/FilterToggleButton.vue'
 import SearchInput from '../components/SearchInput.vue'
+import { useResourceList } from '../composables/useResourceList'
 import ListLayout from '../layouts/ListLayout.vue'
-import type { FilterGroup, FilterSelection, ListCardItem, MonsterBrief } from '../types'
+import type { FilterGroup, ListCardItem, MonsterBrief, MonsterListParams } from '../types'
 import { monsterTypeOptions } from '../utils/filterIcons'
 import { getMonsterIcon } from '../utils/monsterImage'
 
-const SEARCH_DEBOUNCE_MS = 300
-
-const searchText = ref('')
-const filtersOpen = ref(false)
-const selection = reactive<FilterSelection>({
-  types: [],
-})
-const monsters = ref<MonsterBrief[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
 const filterGroups: FilterGroup[] = [{ key: 'types', name: '类型', buttons: monsterTypeOptions }]
 
+const {
+  searchText,
+  filtersOpen,
+  selection,
+  items,
+  loading,
+  error,
+  retry,
+  handleSearchEnter,
+  handleSelectionUpdate,
+} = useResourceList<MonsterBrief, MonsterListParams>({
+  fetch: getMonsterList,
+  buildParams: ({ name, selection: selected }) => ({
+    name: name.trim() || undefined,
+    types: selected.types?.length ? selected.types : undefined,
+  }),
+  initialSelection: { types: [] },
+  errorMessage: '加载怪物列表失败',
+})
+
 const cardItems = computed<ListCardItem[]>(() =>
-  monsters.value.map((monster) => ({
+  items.value.map((monster) => ({
     name: monster.name ?? '未知怪物',
     image: getMonsterIcon(monster.iconName),
     mobileImage: getMonsterIcon(monster.iconName),
@@ -33,59 +43,6 @@ const cardItems = computed<ListCardItem[]>(() =>
     position: 'center center',
   })),
 )
-
-let requestId = 0
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-async function load() {
-  const currentId = ++requestId
-  loading.value = true
-  error.value = null
-
-  try {
-    const types = selection.types ?? []
-
-    const result = await getMonsterList({
-      name: searchText.value.trim() || undefined,
-      types: types.length > 0 ? types : undefined,
-    })
-
-    if (currentId !== requestId) return
-    monsters.value = result
-  } catch (err) {
-    if (currentId !== requestId) return
-    monsters.value = []
-    error.value = err instanceof Error ? err.message : '加载怪物列表失败'
-  } finally {
-    if (currentId === requestId) loading.value = false
-  }
-}
-
-function retry() {
-  void load()
-}
-
-function handleSearchEnter() {
-  if (searchTimer) clearTimeout(searchTimer)
-  void load()
-}
-
-function handleSelectionUpdate(value: FilterSelection) {
-  Object.assign(selection, value)
-}
-
-watch(searchText, () => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => void load(), SEARCH_DEBOUNCE_MS)
-})
-
-watch(selection, () => void load(), { deep: true })
-
-onMounted(() => void load())
-
-onBeforeUnmount(() => {
-  if (searchTimer) clearTimeout(searchTimer)
-})
 </script>
 
 <template>

@@ -1,30 +1,40 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { getReliquaryList } from '../api/reliquary'
 import FilterPanel from '../components/FilterPanel.vue'
 import FilterToggleButton from '../components/FilterToggleButton.vue'
 import SearchInput from '../components/SearchInput.vue'
+import { useResourceList } from '../composables/useResourceList'
 import ListLayout from '../layouts/ListLayout.vue'
-import type { FilterGroup, FilterSelection, ListCardItem, RelicSetBrief } from '../types'
+import type { FilterGroup, ListCardItem, RelicSetBrief, ReliquaryListParams } from '../types'
 import { relicRankOptions } from '../utils/filterIcons'
 import { getRelicSetIcon } from '../utils/reliquaryImage'
 
-const SEARCH_DEBOUNCE_MS = 300
-
-const searchText = ref('')
-const filtersOpen = ref(false)
-const selection = reactive<FilterSelection>({
-  ranks: [],
-})
-const relics = ref<RelicSetBrief[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
 const filterGroups: FilterGroup[] = [{ key: 'ranks', name: '星级', buttons: relicRankOptions }]
 
+const {
+  searchText,
+  filtersOpen,
+  selection,
+  items,
+  loading,
+  error,
+  retry,
+  handleSearchEnter,
+  handleSelectionUpdate,
+} = useResourceList<RelicSetBrief, ReliquaryListParams>({
+  fetch: getReliquaryList,
+  buildParams: ({ name, selection: selected }) => ({
+    name: name.trim() || undefined,
+    ranks: selected.ranks?.length ? selected.ranks.map(Number) : undefined,
+  }),
+  initialSelection: { ranks: [] },
+  errorMessage: '加载圣遗物列表失败',
+})
+
 const cardItems = computed<ListCardItem[]>(() =>
-  relics.value.map((relic) => ({
+  items.value.map((relic) => ({
     name: relic.name ?? '未知圣遗物',
     image: getRelicSetIcon(relic.setIconName),
     mobileImage: getRelicSetIcon(relic.setIconName),
@@ -33,59 +43,6 @@ const cardItems = computed<ListCardItem[]>(() =>
     position: 'center center',
   })),
 )
-
-let requestId = 0
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-async function load() {
-  const currentId = ++requestId
-  loading.value = true
-  error.value = null
-
-  try {
-    const ranks = selection.ranks ?? []
-
-    const result = await getReliquaryList({
-      name: searchText.value.trim() || undefined,
-      ranks: ranks.length > 0 ? ranks.map(Number) : undefined,
-    })
-
-    if (currentId !== requestId) return
-    relics.value = result
-  } catch (err) {
-    if (currentId !== requestId) return
-    relics.value = []
-    error.value = err instanceof Error ? err.message : '加载圣遗物列表失败'
-  } finally {
-    if (currentId === requestId) loading.value = false
-  }
-}
-
-function retry() {
-  void load()
-}
-
-function handleSearchEnter() {
-  if (searchTimer) clearTimeout(searchTimer)
-  void load()
-}
-
-function handleSelectionUpdate(value: FilterSelection) {
-  Object.assign(selection, value)
-}
-
-watch(searchText, () => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => void load(), SEARCH_DEBOUNCE_MS)
-})
-
-watch(selection, () => void load(), { deep: true })
-
-onMounted(() => void load())
-
-onBeforeUnmount(() => {
-  if (searchTimer) clearTimeout(searchTimer)
-})
 </script>
 
 <template>
